@@ -285,7 +285,6 @@
         .record-card-item .rc-meta .meta-val { font-weight:600; color:var(--text); font-family:var(--font-mono); }
         .record-card-item .rc-actions { display:flex; gap:4px; margin-top:6px; }
 
-        /* 每日单价面板专用样式 */
         .daily-form-card {
             background: #f8fafc;
             border: 1.5px solid var(--border);
@@ -380,9 +379,7 @@
             .entry-row { flex-direction:column; align-items:stretch; }
             .entry-row .field-group { flex-direction:row; }
             .records-grid { grid-template-columns:1fr; }
-            .daily-form-card {
-                grid-template-columns: 1fr;
-            }
+            .daily-form-card { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -417,10 +414,12 @@
                         <div><span class="fi-label">📛 基金名称</span><input type="text" id="fundNameCalc" placeholder="例如：华夏成长混合" maxlength="50"></div>
                         <div><span class="fi-label">📊 所属板块</span><input type="text" id="fundSectorCalc" placeholder="如：科技、消费、医疗" maxlength="30"></div>
                     </div>
-                    <div class="section-label">📋 原有持仓 <span class="count-badge" id="entryCountCalc">2笔</span></div>
+                    <div class="section-label">📋 原有持仓 <span class="count-badge" id="entryCountCalc">1笔</span></div>
                     <div id="originalEntriesContainer"></div>
-                    <button class="btn btn-outline btn-sm" onclick="addEntryRow()">➕ 添加一笔</button>
-                    <div class="section-label">🎯 预期购入</div>
+                    <div style="display:flex; justify-content: flex-end; margin: 8px 0 16px 0;">
+                        <button class="btn btn-outline btn-sm" onclick="addEntryRow()">➕ 添加一笔</button>
+                    </div>
+                    <div class="section-label" style="margin-top: 8px;">🎯 预期购入</div>
                     <div class="entry-row highlight-new">
                         <span class="row-num"></span>
                         <div class="field-group"><label>金额:</label><input type="number" id="newAmountCalc" placeholder="元" step="0.01" oninput="autoCalc()"></div>
@@ -455,7 +454,9 @@
                     </div>
                     <div class="section-label">📋 持仓明细 <span class="count-badge" id="entryCountInput">1笔</span></div>
                     <div id="inputEntriesContainer"></div>
-                    <button class="btn btn-outline btn-sm" onclick="addInputRow()">➕ 添加一笔</button>
+                    <div style="display:flex; justify-content: flex-end; margin: 8px 0 16px 0;">
+                        <button class="btn btn-outline btn-sm" onclick="addInputRow()">➕ 添加一笔</button>
+                    </div>
                     <div class="result-grid">
                         <div class="result-item"><div class="r-label">总金额</div><div class="r-value" id="totalAmountInput">¥0.00</div></div>
                         <div class="result-item"><div class="r-label">总份额</div><div class="r-value" id="totalSharesInput">0.0000</div></div>
@@ -466,7 +467,7 @@
             </div>
         </div>
 
-        <!-- 每日单价面板（优化后） -->
+        <!-- 每日单价面板 -->
         <div class="tab-panel" id="panel-daily">
             <div class="card">
                 <div class="card-header"><h2>📆 更新每日单价</h2></div>
@@ -586,7 +587,7 @@
                 sessionStorage.setItem('fund_calc_tab',tab);
             }
 
-            let calcEntryCount=1;
+            let calcEntryCount = 1;
             function createCalcRow(idx) {
                 const row=document.createElement('div'); row.className='entry-row'; row.setAttribute('data-index',idx);
                 row.innerHTML=`<span class="row-num">${idx+1}</span>
@@ -730,10 +731,7 @@
             function renderDailyList() {
                 const container = document.getElementById('dailyListContainer');
                 const allCodes = Object.keys(getDailyDB());
-                if (allCodes.length === 0) {
-                    container.innerHTML = '<div class="daily-list-empty">暂无记录</div>';
-                    return;
-                }
+                if (allCodes.length === 0) { container.innerHTML = '<div class="daily-list-empty">暂无记录</div>'; return; }
                 let html = '';
                 allCodes.forEach(code => {
                     const prices = getAllDailyPrices(code);
@@ -848,50 +846,20 @@
                 const fundCount = records.length;
                 document.getElementById('statTotalAmount').textContent = '¥' + totalAmount.toFixed(2);
                 document.getElementById('statFundCount').textContent = fundCount;
-
                 const sectorMap = new Map();
-                records.forEach(r => {
-                    const sector = r.sector || '未分类';
-                    const existing = sectorMap.get(sector);
-                    if (existing) existing.amount += r.totalAmount;
-                    else sectorMap.set(sector, { sector, amount: r.totalAmount });
-                });
+                records.forEach(r => { const sector = r.sector || '未分类'; const existing = sectorMap.get(sector); if (existing) existing.amount += r.totalAmount; else sectorMap.set(sector, { sector, amount: r.totalAmount }); });
                 const sectors = Array.from(sectorMap.values()).sort((a,b) => b.amount - a.amount);
                 const sectorTbody = document.querySelector('#sectorTable tbody');
                 sectorTbody.innerHTML = '';
-                if (sectors.length === 0) {
-                    document.getElementById('sectorEmpty').style.display = 'block';
-                    document.getElementById('sectorTable').style.display = 'none';
-                } else {
-                    document.getElementById('sectorEmpty').style.display = 'none';
-                    document.getElementById('sectorTable').style.display = '';
-                    sectors.forEach(s => {
-                        const pct = totalAmount > 0 ? (s.amount / totalAmount * 100).toFixed(1) : '0.0';
-                        sectorTbody.innerHTML += `<tr><td>${escHtml(s.sector)}</td><td>¥${s.amount.toFixed(2)}</td><td>${pct}%</td></tr>`;
-                    });
-                }
-
+                if (sectors.length === 0) { document.getElementById('sectorEmpty').style.display = 'block'; document.getElementById('sectorTable').style.display = 'none'; }
+                else { document.getElementById('sectorEmpty').style.display = 'none'; document.getElementById('sectorTable').style.display = ''; sectors.forEach(s => { const pct = totalAmount > 0 ? (s.amount / totalAmount * 100).toFixed(1) : '0.0'; sectorTbody.innerHTML += `<tr><td>${escHtml(s.sector)}</td><td>¥${s.amount.toFixed(2)}</td><td>${pct}%</td></tr>`; }); }
                 const fundMap = new Map();
-                records.forEach(r => {
-                    const key = r.name || r.code || '未命名';
-                    const existing = fundMap.get(key);
-                    if (existing) existing.amount += r.totalAmount;
-                    else fundMap.set(key, { name: key, amount: r.totalAmount });
-                });
+                records.forEach(r => { const key = r.name || r.code || '未命名'; const existing = fundMap.get(key); if (existing) existing.amount += r.totalAmount; else fundMap.set(key, { name: key, amount: r.totalAmount }); });
                 const funds = Array.from(fundMap.values()).sort((a,b) => b.amount - a.amount);
                 const fundTbody = document.querySelector('#fundTable tbody');
                 fundTbody.innerHTML = '';
-                if (funds.length === 0) {
-                    document.getElementById('fundEmpty').style.display = 'block';
-                    document.getElementById('fundTable').style.display = 'none';
-                } else {
-                    document.getElementById('fundEmpty').style.display = 'none';
-                    document.getElementById('fundTable').style.display = '';
-                    funds.forEach(f => {
-                        const pct = totalAmount > 0 ? (f.amount / totalAmount * 100).toFixed(1) : '0.0';
-                        fundTbody.innerHTML += `<tr><td>${escHtml(f.name)}</td><td>¥${f.amount.toFixed(2)}</td><td>${pct}%</td></tr>`;
-                    });
-                }
+                if (funds.length === 0) { document.getElementById('fundEmpty').style.display = 'block'; document.getElementById('fundTable').style.display = 'none'; }
+                else { document.getElementById('fundEmpty').style.display = 'none'; document.getElementById('fundTable').style.display = ''; funds.forEach(f => { const pct = totalAmount > 0 ? (f.amount / totalAmount * 100).toFixed(1) : '0.0'; fundTbody.innerHTML += `<tr><td>${escHtml(f.name)}</td><td>¥${f.amount.toFixed(2)}</td><td>${pct}%</td></tr>`; }); }
             }
 
             function refreshAll() { renderRecordsList(); if(currentTab==='overview') renderOverview(); if(currentTab==='daily') renderDailyList(); updateBadgeDot(); }
