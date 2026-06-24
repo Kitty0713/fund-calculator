@@ -2,1928 +2,1931 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>数据看板 · 移动端</title>
-    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js">
-    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>基金持仓成本计算器</title>
     <style>
-        /* ===== 全局重置 & 变量 ===== */
         :root {
-            --primary: #1677ff;
-            --primary-light: #e6f0ff;
-            --primary-active: #0958d9;
-            --bg: #f2f5fa;
-            --card-bg: #ffffff;
-            --text-dark: #1a2332;
-            --text-mid: #3a4a5e;
-            --text-light: #7a8a9e;
-            --border-color: #e9edf4;
-            --radius: 20px;
-            --shadow-sm: 0 2px 12px rgba(0, 20, 50, 0.06);
-            --shadow-md: 0 4px 20px rgba(0, 20, 50, 0.08);
+            --bg: #f1f5f9;
+            --surface: #ffffff;
+            --surface-alt: #f8fafc;
+            --primary: #4f46e5;
+            --primary-light: #eef2ff;
+            --primary-hover: #4338ca;
+            --primary-600: #4f46e5;
+            --primary-700: #4338ca;
+            --accent: #06b6d4;
+            --accent-light: #ecfeff;
+            --success: #10b981;
+            --success-light: #ecfdf5;
+            --warning: #f59e0b;
+            --warning-light: #fffbeb;
+            --danger: #ef4444;
+            --danger-light: #fef2f2;
+            --text: #1e293b;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            --border: #e2e8f0;
+            --border-light: #f1f5f9;
+            --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.03);
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 8px 15px rgba(0, 0, 0, 0.06), 0 3px 6px rgba(0, 0, 0, 0.04);
+            --shadow-lg: 0 16px 30px rgba(0, 0, 0, 0.07), 0 6px 10px rgba(0, 0, 0, 0.04);
+            --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.08);
+            --radius-xs: 4px;
+            --radius-sm: 8px;
+            --radius: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+            --radius-2xl: 24px;
+            --font-mono: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', 'Consolas', 'Monaco', 'Menlo', monospace;
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+                'Microsoft YaHei', sans-serif;
+            --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --max-width: 1200px;
+            --nav-height: 64px;
         }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        html {
+            scroll-behavior: smooth;
         }
         body {
+            font-family: var(--font-sans);
             background: var(--bg);
-            display: flex;
-            justify-content: center;
+            color: var(--text);
+            line-height: 1.6;
             min-height: 100vh;
-            padding: 12px 0 30px 0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            letter-spacing: -0.1px;
         }
-        .app-container {
-            width: 100%;
-            max-width: 420px;
-            background: var(--bg);
-            padding: 16px 16px 80px 16px;
-            margin: 0 12px;
-        }
-        /* ===== 头部 ===== */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-        .header h1 {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--text-dark);
-            letter-spacing: -0.3px;
-        }
-        .filter-trigger {
-            background: white;
-            padding: 8px 14px;
-            border-radius: 30px;
-            font-size: 13px;
-            color: var(--primary);
-            font-weight: 500;
-            border: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            cursor: pointer;
-            background: #ffffff;
-            box-shadow: var(--shadow-sm);
-            transition: all 0.2s;
-        }
-        .filter-trigger:active {
-            transform: scale(0.95);
-            background: var(--primary-light);
-        }
-        /* ===== 浮层 ===== */
-        .filter-overlay {
-            display: none;
-            position: fixed;
+
+        /* ==================== 导航栏 ==================== */
+        .navbar {
+            position: sticky;
             top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.45);
-            z-index: 999;
-            justify-content: center;
-            align-items: flex-end;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid var(--border);
+            box-shadow: var(--shadow-xs);
+            transition: var(--transition);
+            height: var(--nav-height);
         }
-        .filter-overlay.active {
+        .navbar-inner {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 0 20px;
             display: flex;
-        }
-        .filter-panel {
-            background: white;
-            width: 100%;
-            max-width: 420px;
-            max-height: 80vh;
-            border-radius: 24px 24px 0 0;
-            padding: 24px 20px 40px 20px;
-            overflow-y: auto;
-            animation: slideUp 0.3s ease;
-            box-shadow: 0 -8px 30px rgba(0,0,0,0.08);
-        }
-        @keyframes slideUp {
-            from { transform: translateY(100%); }
-            to { transform: translateY(0); }
-        }
-        .filter-panel .title {
-            display: flex;
+            align-items: center;
             justify-content: space-between;
-            align-items: center;
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            color: var(--text-dark);
+            height: 100%;
+            gap: 16px;
         }
-        .filter-panel .close-btn {
-            font-size: 24px;
-            color: #8c9ab0;
-            cursor: pointer;
-        }
-        .filter-group {
-            margin-bottom: 22px;
-        }
-        .filter-group label {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-mid);
-            display: block;
-            margin-bottom: 8px;
-        }
-        .filter-options {
+        .nav-brand {
             display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        .filter-options .tag {
-            background: #f0f2f7;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 13px;
-            color: var(--text-mid);
-            border: 1px solid transparent;
-            cursor: pointer;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.15rem;
+            color: var(--text);
+            letter-spacing: -0.4px;
+            white-space: nowrap;
+            cursor: default;
             user-select: none;
-            transition: all 0.15s;
         }
-        .filter-options .tag.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-            box-shadow: 0 2px 8px rgba(22, 119, 255, 0.2);
-        }
-        .filter-options .tag:active {
-            transform: scale(0.94);
-        }
-        .date-range {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        .date-range input {
-            flex: 1;
-            padding: 10px 12px;
-            border: 1px solid #dce0e8;
-            border-radius: 12px;
-            font-size: 14px;
-            background: #fafbfc;
-        }
-        .apply-filter-btn {
-            width: 100%;
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 14px 0;
-            border-radius: 16px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 10px;
-            box-shadow: 0 4px 12px rgba(22, 119, 255, 0.25);
-            transition: all 0.2s;
-        }
-        .apply-filter-btn:active {
-            background: var(--primary-active);
-            transform: scale(0.98);
-        }
-        /* ===== 指标筛选浮层 ===== */
-        .indicator-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            max-height: 50vh;
-            overflow-y: auto;
-            margin: 12px 0 16px 0;
-        }
-        .indicator-item {
+        .nav-brand .brand-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-sm);
+            background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 8px 12px;
-            background: #f8faff;
-            border-radius: 12px;
-            border: 1px solid #eef2f7;
-        }
-        .indicator-item input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            accent-color: var(--primary);
+            justify-content: center;
+            color: #fff;
+            font-size: 1.25rem;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
             flex-shrink: 0;
         }
-        .indicator-item label {
-            font-size: 14px;
-            color: var(--text-dark);
-            flex: 1;
-        }
-        .indicator-actions {
+        .nav-tabs {
             display: flex;
-            gap: 12px;
-            margin-top: 8px;
-        }
-        .indicator-actions button {
-            flex: 1;
-            padding: 12px 0;
-            border-radius: 16px;
-            font-size: 15px;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-        .indicator-actions .btn-apply {
-            background: var(--primary);
-            color: white;
-            box-shadow: 0 2px 8px rgba(22, 119, 255, 0.2);
-        }
-        .indicator-actions .btn-apply:active {
-            background: var(--primary-active);
-            transform: scale(0.96);
-        }
-        .indicator-actions .btn-cancel {
-            background: #f0f2f7;
-            color: var(--text-mid);
-        }
-        .indicator-actions .btn-cancel:active {
-            background: #e0e4ec;
-            transform: scale(0.96);
-        }
-        /* ===== 客户明细弹窗 ===== */
-        .detail-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: flex-end;
-        }
-        .detail-overlay.active {
-            display: flex;
-        }
-        .detail-panel {
-            background: white;
-            width: 100%;
-            max-width: 420px;
-            max-height: 85vh;
-            border-radius: 24px 24px 0 0;
-            padding: 20px 16px 30px 16px;
-            overflow-y: auto;
-            animation: slideUp 0.3s ease;
-            box-shadow: 0 -8px 30px rgba(0,0,0,0.08);
-        }
-        .detail-panel .title {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 17px;
-            font-weight: 600;
-            color: var(--text-dark);
-            margin-bottom: 12px;
-            position: sticky;
-            top: 0;
-            background: white;
-            z-index: 2;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #eef0f4;
-        }
-        .detail-panel .close-btn {
-            font-size: 24px;
-            color: #8c9ab0;
-            cursor: pointer;
-            padding: 0 8px;
-        }
-        .detail-panel .client-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 4px 8px;
-            padding: 8px 0;
-            border-bottom: 1px solid #f2f4f8;
-            font-size: 12px;
-            align-items: center;
-        }
-        .detail-panel .client-row.header-row {
-            font-weight: 600;
-            color: var(--text-dark);
-            background: #f8faff;
-            border-radius: 8px;
-            padding: 8px 6px;
-            margin-bottom: 4px;
-            border-bottom: 2px solid #dce0e8;
-            position: sticky;
-            top: 48px;
-            background: white;
-            z-index: 1;
-        }
-        .detail-panel .client-row .cell {
-            padding: 2px 4px;
-            word-break: break-all;
-            line-height: 1.4;
-        }
-        .detail-panel .client-row .cell .tag {
-            background: #eef5ff;
-            color: var(--primary);
-            padding: 0 6px;
-            border-radius: 10px;
-            font-size: 10px;
-            white-space: nowrap;
-        }
-        .detail-panel .client-row .cell .status {
-            font-size: 10px;
-            padding: 1px 8px;
-            border-radius: 12px;
-            display: inline-block;
-        }
-        .detail-panel .client-row .cell .status.active {
-            background: #e5f9ed;
-            color: #22a65e;
-        }
-        .detail-panel .client-row .cell .status.inactive {
-            background: #fde8e8;
-            color: #e65a5a;
-        }
-        .detail-panel .export-btn {
-            margin-top: 16px;
-            width: 100%;
-            padding: 12px 0;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 16px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            position: sticky;
-            bottom: 0;
-            box-shadow: 0 2px 12px rgba(22, 119, 255, 0.25);
-            transition: all 0.15s;
-        }
-        .detail-panel .export-btn:active {
-            background: var(--primary-active);
-            transform: scale(0.98);
-        }
-        /* ===== 板块通用 ===== */
-        .block-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 12px 0 4px 0;
-        }
-        .block-header h2 {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text-dark);
-        }
-        .indicator-filter-btn {
-            background: white;
-            padding: 4px 14px;
-            border-radius: 30px;
-            font-size: 12px;
-            color: var(--primary);
-            border: 1px solid #dce0e8;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
             gap: 4px;
-            box-shadow: var(--shadow-sm);
-            transition: all 0.15s;
-        }
-        .indicator-filter-btn:active {
-            transform: scale(0.94);
-            background: var(--primary-light);
-        }
-        /* ===== 页面容器 ===== */
-        .page-container {
-            display: none;
-        }
-        .page-container.active {
-            display: block;
-        }
-        /* ===== 总览 ===== */
-        .metrics-scroll {
-            display: flex;
-            gap: 12px;
+            background: #f1f5f9;
+            border-radius: 28px;
+            padding: 4px;
             overflow-x: auto;
-            padding: 4px 0 16px 0;
-            scrollbar-width: none;
             -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            flex-shrink: 0;
         }
-        .metrics-scroll::-webkit-scrollbar {
+        .nav-tabs::-webkit-scrollbar {
             display: none;
         }
-        .metric-card {
-            flex: 0 0 140px;
-            background: white;
-            border-radius: var(--radius);
-            padding: 16px 14px;
-            border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-sm);
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-        .metric-card:active {
-            transform: scale(0.96);
-            box-shadow: var(--shadow-md);
-        }
-        .metric-card .label {
-            font-size: 13px;
-            color: var(--text-light);
-            margin-bottom: 4px;
+        .nav-tab {
+            padding: 9px 18px;
+            border-radius: 24px;
+            font-size: 0.88rem;
             font-weight: 500;
-        }
-        .metric-card .value {
-            font-size: 26px;
-            font-weight: 700;
-            color: var(--text-dark);
-            letter-spacing: -0.5px;
-        }
-        .metric-card .change {
-            font-size: 12px;
-            color: #22a65e;
-            background: #e5f9ed;
-            padding: 2px 8px;
-            border-radius: 30px;
-            display: inline-block;
-            margin-top: 6px;
-        }
-        .metric-card .change.down {
-            color: #e65a5a;
-            background: #fde8e8;
-        }
-        .metric-card .sub {
-            font-size: 12px;
-            color: var(--text-light);
-            margin-top: 6px;
-        }
-        .charts-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            margin: 8px 0 20px 0;
-        }
-        .chart-box {
-            background: white;
-            border-radius: var(--radius);
-            padding: 16px 12px 8px 12px;
-            border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-sm);
-        }
-        .chart-box .chart-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-dark);
-            margin-bottom: 4px;
-            display: flex;
-            justify-content: space-between;
-        }
-        .chart-box .chart-title span {
-            color: var(--text-light);
-            font-weight: 400;
-            font-size: 12px;
-        }
-        .chart-container {
-            width: 100%;
-            height: 160px;
-        }
-        .chart-container.pie {
-            height: 150px;
-        }
-        .list-section {
-            background: white;
-            border-radius: var(--radius);
-            padding: 16px;
-            border: 1px solid var(--border-color);
-            margin-top: 8px;
-            box-shadow: var(--shadow-sm);
-        }
-        .list-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-        .list-header h3 {
-            font-size: 15px;
-            font-weight: 600;
-            color: var(--text-dark);
-        }
-        .list-header .action-btn {
-            color: var(--primary);
-            font-size: 13px;
-            font-weight: 500;
-            background: var(--primary-light);
-            padding: 4px 12px;
-            border-radius: 30px;
             cursor: pointer;
             border: none;
-            transition: all 0.15s;
-        }
-        .list-header .action-btn:active {
-            background: #d9e8ff;
-            transform: scale(0.96);
-        }
-        .client-item {
-            display: flex;
-            justify-content: space-between;
+            background: transparent;
+            color: var(--text-secondary);
+            transition: var(--transition-fast);
+            white-space: nowrap;
+            letter-spacing: -0.1px;
+            position: relative;
+            font-family: inherit;
+            display: inline-flex;
             align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #f2f4f8;
+            gap: 6px;
+            user-select: none;
         }
-        .client-item:last-child {
-            border-bottom: none;
+        .nav-tab:hover {
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.6);
         }
-        .client-info .name {
-            font-size: 15px;
-            font-weight: 500;
-            color: var(--text-dark);
-        }
-        .client-info .tag {
-            font-size: 11px;
+        .nav-tab.active {
+            background: #fff;
             color: var(--primary);
-            background: var(--primary-light);
-            padding: 0 8px;
-            border-radius: 20px;
-            margin-left: 6px;
-        }
-        .client-info .detail {
-            font-size: 12px;
-            color: var(--text-light);
-            margin-top: 2px;
-        }
-        .client-amount {
+            box-shadow: var(--shadow-sm);
             font-weight: 600;
-            color: var(--text-dark);
-            font-size: 15px;
         }
-        /* ===== 区域 & 服务商 ===== */
-        .selector-scroll {
+        .nav-tab .tab-icon {
+            font-size: 1rem;
+            line-height: 1;
+        }
+        .nav-actions {
             display: flex;
             gap: 8px;
-            overflow-x: auto;
-            padding: 4px 0 12px 0;
-            scrollbar-width: none;
-            -webkit-overflow-scrolling: touch;
+            flex-shrink: 0;
         }
-        .selector-scroll::-webkit-scrollbar {
-            display: none;
-        }
-        .selector-tab {
-            flex: 0 0 auto;
-            padding: 8px 18px;
-            background: white;
-            border-radius: 30px;
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--text-mid);
-            border: 1px solid var(--border-color);
+        .btn-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1.5px solid var(--border);
+            background: #fff;
             cursor: pointer;
-            white-space: nowrap;
-            box-shadow: var(--shadow-sm);
-            transition: all 0.15s;
-        }
-        .selector-tab.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-            box-shadow: 0 2px 12px rgba(22, 119, 255, 0.25);
-        }
-        .selector-tab:active {
-            transform: scale(0.94);
-        }
-
-        /* ===== 区域分类导航（分段控制器 + sticky） ===== */
-        .category-nav-wrapper {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            background: var(--bg);
-            padding: 4px 0 8px 0;
-            margin: 0 -4px;
-        }
-        .category-nav {
+            font-size: 1.1rem;
             display: flex;
-            gap: 6px;
-            overflow-x: auto;
-            padding: 4px 4px 8px 4px;
-            scrollbar-width: none;
-            -webkit-overflow-scrolling: touch;
-            background: white;
-            border-radius: 30px;
-            padding: 4px 6px;
-            box-shadow: var(--shadow-sm);
-            border: 1px solid var(--border-color);
-        }
-        .category-nav::-webkit-scrollbar {
-            display: none;
-        }
-        .category-nav .cat-tab {
-            flex: 1 0 auto;
-            padding: 6px 14px;
-            border-radius: 30px;
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-mid);
-            background: transparent;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: all 0.2s;
-            text-align: center;
-            border: none;
-            min-width: 54px;
-        }
-        .category-nav .cat-tab.active {
-            background: var(--primary);
-            color: white;
-            box-shadow: 0 2px 10px rgba(22, 119, 255, 0.25);
-        }
-        .category-nav .cat-tab:active {
-            transform: scale(0.94);
-        }
-
-        /* ===== 区域指标列表（单列横排） ===== */
-        .metrics-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            background: white;
-            border-radius: var(--radius);
-            padding: 12px 14px;
-            border: 1px solid var(--border-color);
-            margin-top: 8px;
-            box-shadow: var(--shadow-sm);
-        }
-        .metrics-list .metric-item {
-            width: 100%;
-            background: #fafcff;
-            border-radius: 14px;
-            padding: 12px 16px;
-            display: flex;
-            justify-content: space-between;
             align-items: center;
-            border: 1px solid #f0f4ff;
-            cursor: pointer;
-            transition: all 0.15s;
-            min-height: 52px;
+            justify-content: center;
+            transition: var(--transition-fast);
+            color: var(--text-secondary);
             position: relative;
         }
-        .metrics-list .metric-item::after {
-            content: '›';
-            font-size: 18px;
-            color: var(--text-light);
-            margin-left: 8px;
-            opacity: 0.5;
-        }
-        .metrics-list .metric-item:active {
-            transform: scale(0.97);
-            background: #eef4ff;
+        .btn-icon:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            color: var(--text);
             box-shadow: var(--shadow-sm);
         }
-        .metrics-list .metric-item .m-label {
-            font-size: 14px;
-            color: var(--text-mid);
-            font-weight: 500;
-            flex: 1;
-            margin-right: 12px;
-        }
-        .metrics-list .metric-item .m-value {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--text-dark);
-            text-align: right;
-            flex-shrink: 0;
-            white-space: nowrap;
+        .btn-icon .badge-dot {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--danger);
+            border: 2px solid #fff;
         }
 
-        /* ===== 服务商网格（两列，横排） ===== */
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+        /* ==================== 主内容区 ==================== */
+        .main-content {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 20px 20px 40px;
+            min-height: calc(100vh - var(--nav-height) - 40px);
+        }
+        .tab-panel {
+            display: none;
+            animation: fadeSlideIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .tab-panel.active {
+            display: block;
+        }
+        @keyframes fadeSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ==================== 卡片 ==================== */
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            transition: var(--transition);
+            margin-bottom: 20px;
+        }
+        .card:hover {
+            box-shadow: var(--shadow-md);
+        }
+        .card-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             gap: 12px;
-            background: white;
-            border-radius: var(--radius);
-            padding: 16px;
-            border: 1px solid var(--border-color);
-            margin-top: 8px;
-            box-shadow: var(--shadow-sm);
+            background: var(--surface-alt);
+            flex-wrap: wrap;
         }
-        .metric-item {
-            background: #fafcff;
-            border-radius: 14px;
-            padding: 12px 10px;
+        .card-header h2 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--text);
+            letter-spacing: -0.3px;
             display: flex;
-            flex-direction: column;
-            border: 1px solid #f0f4ff;
-            cursor: pointer;
-            transition: all 0.15s;
+            align-items: center;
+            gap: 8px;
         }
-        .metric-item:active {
-            transform: scale(0.96);
-            background: #eef4ff;
-            box-shadow: var(--shadow-sm);
+        .card-header h2 .dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
         }
-        .metric-item .m-label {
-            font-size: 12px;
-            color: var(--text-light);
-            margin-bottom: 4px;
-            line-height: 1.4;
+        .dot.indigo {
+            background: var(--primary);
         }
-        .metric-item .m-value {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--text-dark);
-            word-break: break-all;
+        .dot.teal {
+            background: var(--accent);
         }
-        .service-summary-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+        .dot.green {
+            background: var(--success);
+        }
+        .dot.amber {
+            background: var(--warning);
+        }
+        .card-body {
+            padding: 20px 24px;
+        }
+        .card-body.no-padding {
+            padding: 0;
+        }
+        .card-body.compact {
+            padding: 14px 20px;
+        }
+
+        /* ==================== 计算器样式 ==================== */
+        .section-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-label .count-badge {
+            font-size: 0.7rem;
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+            letter-spacing: 0;
+            text-transform: none;
+        }
+        .entry-row {
+            display: flex;
             gap: 10px;
-            background: white;
+            align-items: center;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+            background: #fafbfc;
+            padding: 12px 16px;
             border-radius: var(--radius);
-            padding: 16px;
-            border: 1px solid var(--border-color);
-            margin-bottom: 12px;
-            box-shadow: var(--shadow-sm);
+            border: 1.5px solid transparent;
+            transition: var(--transition-fast);
+            position: relative;
         }
-        .service-summary-grid .metric-item {
-            background: #f5f9ff;
-            border-color: #e6edf8;
+        .entry-row:hover {
+            border-color: #e0e7ef;
+            background: #f9fafb;
+            box-shadow: var(--shadow-xs);
         }
-        .breadcrumb {
+        .entry-row .row-num {
+            font-weight: 700;
+            color: #cbd5e1;
+            font-size: 0.85rem;
+            min-width: 24px;
+            text-align: center;
+            flex-shrink: 0;
+            font-family: var(--font-mono);
+        }
+        .entry-row input {
+            flex: 1;
+            min-width: 90px;
+            padding: 10px 14px;
+            border: 1.8px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            transition: var(--transition-fast);
+            background: #fff;
+            color: var(--text);
+            font-family: var(--font-mono);
+            letter-spacing: -0.2px;
+            outline: none;
+        }
+        .entry-row input:focus {
+            border-color: #a5b4fc;
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.06);
+            background: #fff;
+        }
+        .entry-row input.input-amount {
+            flex: 1.3;
+        }
+        .entry-row input.input-price {
+            flex: 1;
+        }
+        .entry-row .shares-cell {
+            flex: 0.9;
+            min-width: 80px;
+            text-align: right;
+            font-family: var(--font-mono);
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 0.88rem;
+            padding: 10px 10px;
+            background: var(--primary-light);
+            border-radius: var(--radius-sm);
+            white-space: nowrap;
+            letter-spacing: -0.2px;
+        }
+        .entry-row .shares-cell.placeholder {
+            color: #cbd5e1;
+            background: #f8fafc;
+            font-weight: 400;
+        }
+        .btn-remove {
+            flex-shrink: 0;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 1.5px solid #fecaca;
+            background: #fff;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: var(--transition-fast);
             display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+        .btn-remove:hover {
+            background: var(--danger-light);
+            border-color: #f87171;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.12);
+        }
+        .btn-remove:disabled {
+            opacity: 0.25;
+            cursor: not-allowed;
+            border-color: #e5e7eb;
+            color: #cbd5e1;
+        }
+
+        /* 预期购入行高亮 */
+        .entry-row.highlight-new {
+            background: #fffbeb;
+            border-color: #fde68a;
+            border-style: dashed;
+        }
+        .entry-row.highlight-new:hover {
+            border-color: #fcd34d;
+            background: #fffbeb;
+        }
+
+        /* ==================== 按钮 ==================== */
+        .btn {
+            display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 4px 0 10px 0;
-            flex-wrap: wrap;
-            font-size: 14px;
-            color: var(--text-light);
-        }
-        .breadcrumb .crumb {
-            color: var(--primary);
+            padding: 10px 18px;
+            border-radius: 24px;
+            font-size: 0.88rem;
             font-weight: 500;
             cursor: pointer;
-            padding: 2px 6px;
-            border-radius: 12px;
-            transition: background 0.15s;
+            border: 1.8px solid transparent;
+            transition: var(--transition-fast);
+            letter-spacing: -0.2px;
+            white-space: nowrap;
+            font-family: inherit;
+            user-select: none;
+            text-decoration: none;
         }
-        .breadcrumb .crumb:active {
+        .btn:active {
+            transform: scale(0.96);
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+        }
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            border-color: var(--primary-hover);
+            box-shadow: 0 6px 18px rgba(79, 70, 229, 0.28);
+            transform: translateY(-1px);
+        }
+        .btn-outline {
+            background: #fff;
+            color: var(--primary);
+            border-color: #c7d2fe;
+        }
+        .btn-outline:hover {
             background: var(--primary-light);
+            border-color: var(--primary);
+            box-shadow: var(--shadow-sm);
         }
-        .breadcrumb .crumb.current {
-            color: var(--text-dark);
-            font-weight: 600;
-            cursor: default;
+        .btn-ghost {
+            background: transparent;
+            border-color: transparent;
+            color: var(--text-secondary);
         }
-        .breadcrumb .sep {
-            color: #d0d6e0;
+        .btn-ghost:hover {
+            background: #f1f5f9;
+            color: var(--text);
+        }
+        .btn-danger {
+            background: #fff;
+            color: var(--danger);
+            border-color: #fecaca;
+        }
+        .btn-danger:hover {
+            background: var(--danger-light);
+            border-color: #f87171;
+        }
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 0.78rem;
+            border-radius: 20px;
+        }
+        .btn-xs {
+            padding: 4px 10px;
+            font-size: 0.72rem;
+            border-radius: 16px;
+            gap: 3px;
+        }
+        .btn-accent {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+            box-shadow: 0 2px 8px rgba(6, 182, 212, 0.2);
+        }
+        .btn-accent:hover {
+            background: #0891b2;
+            border-color: #0891b2;
+            box-shadow: 0 6px 18px rgba(6, 182, 212, 0.28);
+            transform: translateY(-1px);
         }
 
-        /* ===== 底部导航 ===== */
-        .bottom-tab {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            max-width: 420px;
-            background: white;
-            display: flex;
-            justify-content: space-around;
-            padding: 10px 0 16px 0;
-            border-top: 1px solid #eef0f4;
-            margin: 0 auto;
-            right: 0;
-            border-radius: 20px 20px 0 0;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.04);
+        /* ==================== 结果展示区 ==================== */
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 14px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f0f9ff 30%, #ecfdf5 100%);
+            border: 2px solid #dbeafe;
+            border-radius: var(--radius-lg);
+            padding: 20px 22px;
+            margin-top: 16px;
         }
-        .bottom-tab .tab-item {
-            font-size: 12px;
-            color: var(--text-light);
+        .result-item {
+            text-align: center;
+            padding: 6px 4px;
+        }
+        .result-item .r-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+            margin-bottom: 3px;
+        }
+        .result-item .r-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text);
+            font-family: var(--font-mono);
+            letter-spacing: -0.4px;
+        }
+        .result-item .r-value.large {
+            font-size: 1.6rem;
+            color: var(--primary);
+        }
+        .result-item .r-value.green {
+            color: var(--success);
+        }
+        .result-item.full-width {
+            grid-column: 1 / -1;
+            background: #fff;
+            border-radius: var(--radius-sm);
+            padding: 14px;
+            border: 2px dashed #c7d2fe;
+        }
+        .result-item.full-width .r-value {
+            font-size: 2rem;
+            color: var(--primary);
+            letter-spacing: -0.8px;
+        }
+
+        /* ==================== 保存区域 ==================== */
+        .save-bar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px dashed var(--border);
+        }
+        .save-bar input {
+            flex: 1;
+            min-width: 100px;
+            padding: 10px 14px;
+            border: 1.8px solid var(--border);
+            border-radius: 24px;
+            font-size: 0.85rem;
+            transition: var(--transition-fast);
+            background: #fff;
+            font-family: inherit;
+            outline: none;
+        }
+        .save-bar input:focus {
+            border-color: #a5b4fc;
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.05);
+        }
+        .save-bar input::placeholder {
+            color: #cbd5e1;
+        }
+
+        /* ==================== 记录列表（Tab2） ==================== */
+        .records-toolbar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border-light);
+            background: #fafbfc;
+        }
+        .search-input-wrap {
+            flex: 1;
+            min-width: 180px;
+            position: relative;
+        }
+        .search-input-wrap input {
+            width: 100%;
+            padding: 10px 14px 10px 38px;
+            border: 1.8px solid var(--border);
+            border-radius: 24px;
+            font-size: 0.85rem;
+            background: #fff;
+            transition: var(--transition-fast);
+            font-family: inherit;
+            outline: none;
+        }
+        .search-input-wrap input:focus {
+            border-color: #a5b4fc;
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.05);
+        }
+        .search-input-wrap .search-icon {
+            position: absolute;
+            left: 13px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+        .records-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 14px;
+            padding: 16px 20px;
+            max-height: 62vh;
+            overflow-y: auto;
+        }
+        .records-grid::-webkit-scrollbar {
+            width: 5px;
+        }
+        .records-grid::-webkit-scrollbar-track {
+            background: transparent;
+            border-radius: 10px;
+        }
+        .records-grid::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 10px;
+        }
+        .record-card-item {
+            background: #fff;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px 18px;
+            transition: var(--transition-fast);
+            cursor: default;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .record-card-item:hover {
+            border-color: #c7d2fe;
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+        .record-card-item.editing-highlight {
+            border-color: var(--primary);
+            background: var(--primary-light);
+            box-shadow: 0 0 0 6px rgba(79, 70, 229, 0.05);
+        }
+        .record-card-item .rc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        .record-card-item .rc-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text);
+            letter-spacing: -0.3px;
+            word-break: break-word;
+        }
+        .record-card-item .rc-code {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            letter-spacing: 0.3px;
+            background: #f1f5f9;
+            padding: 2px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        .record-card-item .rc-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            font-size: 0.76rem;
+            color: var(--text-secondary);
+        }
+        .record-card-item .rc-meta .meta-val {
+            font-weight: 600;
+            color: var(--text);
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+        }
+        .record-card-item .rc-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+        .record-card-item .rc-time {
+            font-size: 0.68rem;
+            color: #cbd5e1;
+        }
+
+        /* ==================== 概览页（Tab3） ==================== */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: #fff;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 18px 20px;
+            text-align: center;
+            transition: var(--transition-fast);
+            cursor: default;
+        }
+        .stat-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+        .stat-card .stat-icon {
+            font-size: 2rem;
+            margin-bottom: 6px;
+        }
+        .stat-card .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text);
+            font-family: var(--font-mono);
+            letter-spacing: -0.6px;
+        }
+        .stat-card .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+            letter-spacing: 0.3px;
+        }
+        .stat-card.accent {
+            border-left: 4px solid var(--accent);
+        }
+        .stat-card.primary-border {
+            border-left: 4px solid var(--primary);
+        }
+        .stat-card.success-border {
+            border-left: 4px solid var(--success);
+        }
+        .stat-card.warning-border {
+            border-left: 4px solid var(--warning);
+        }
+
+        /* 简易柱状图 */
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            height: 200px;
+            padding: 10px 0;
+            flex-wrap: wrap;
+        }
+        .bar-col {
+            flex: 1;
+            min-width: 40px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 2px;
+            gap: 6px;
+            height: 100%;
+            justify-content: flex-end;
+        }
+        .bar-col .bar {
+            width: 100%;
+            max-width: 60px;
+            border-radius: 8px 8px 4px 4px;
+            transition: var(--transition);
             cursor: pointer;
-            padding: 4px 12px;
-            border-radius: 30px;
-            transition: all 0.15s;
+            position: relative;
+            min-height: 4px;
+            background: linear-gradient(180deg, var(--primary) 0%, #7c3aed 100%);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
         }
-        .bottom-tab .tab-item.active {
-            color: var(--primary);
-            font-weight: 500;
-            background: var(--primary-light);
+        .bar-col .bar:hover {
+            opacity: 0.85;
+            transform: scaleY(1.03);
+            transform-origin: bottom;
+            box-shadow: 0 6px 18px rgba(79, 70, 229, 0.3);
         }
-        .bottom-tab .tab-item span {
-            font-size: 20px;
+        .bar-col .bar.accent-bar {
+            background: linear-gradient(180deg, var(--accent) 0%, #0891b2 100%);
+            box-shadow: 0 4px 12px rgba(6, 182, 212, 0.2);
         }
-        /* ===== Toast ===== */
-        .toast {
-            position: fixed;
-            top: 30%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.78);
-            color: white;
-            padding: 14px 24px;
-            border-radius: 16px;
-            font-size: 14px;
-            z-index: 9999;
-            display: none;
-            backdrop-filter: blur(4px);
+        .bar-col .bar-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
             text-align: center;
-            max-width: 80%;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+            word-break: break-all;
+            line-height: 1.2;
+            max-width: 70px;
         }
-        .toast.show {
-            display: block;
-            animation: fadeIn 0.2s ease;
+        .bar-col .bar-value {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text);
+            font-family: var(--font-mono);
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translate(-50%, -40%); }
-            to { opacity: 1; transform: translate(-50%, -50%); }
+
+        /* ==================== 工具页（Tab4） ==================== */
+        .tool-section {
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border-light);
         }
-        /* ===== 移动端适配 ===== */
-        @media (max-width: 420px) {
-            .app-container {
-                padding: 12px 12px 80px 12px;
+        .tool-section:last-child {
+            border-bottom: none;
+        }
+        .tool-section h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            letter-spacing: -0.2px;
+        }
+        .tool-section p {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        /* ==================== Toast ==================== */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+        .toast {
+            padding: 13px 20px;
+            border-radius: 28px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #fff;
+            box-shadow: var(--shadow-xl);
+            animation: slideIn 0.35s ease-out, fadeOut 0.3s ease-in forwards;
+            animation-delay: 0s, 2.5s;
+            max-width: 400px;
+            letter-spacing: -0.1px;
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .toast.success {
+            background: #059669;
+        }
+        .toast.error {
+            background: #dc2626;
+        }
+        .toast.info {
+            background: #4f46e5;
+        }
+        .toast.warning {
+            background: #d97706;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(130%);
+                opacity: 0;
             }
-            .metric-card {
-                flex: 0 0 120px;
-                padding: 12px;
+            to {
+                transform: translateX(0);
+                opacity: 1;
             }
-            .metric-card .value {
-                font-size: 22px;
+        }
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
             }
-            .service-summary-grid {
+            to {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+        }
+
+        /* ==================== 空状态 ==================== */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+        .empty-state .empty-icon {
+            font-size: 3.5rem;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+        .empty-state p {
+            font-size: 0.9rem;
+            letter-spacing: -0.1px;
+        }
+
+        /* ==================== 响应式 ==================== */
+        @media (max-width: 768px) {
+            .navbar-inner {
+                padding: 0 10px;
+                gap: 8px;
+            }
+            .nav-brand {
+                font-size: 0.95rem;
+                gap: 6px;
+            }
+            .nav-brand .brand-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 1rem;
+                border-radius: 6px;
+            }
+            .nav-tabs {
+                gap: 1px;
+                padding: 3px;
+                border-radius: 20px;
+            }
+            .nav-tab {
+                padding: 7px 12px;
+                font-size: 0.75rem;
+                border-radius: 18px;
+                gap: 3px;
+            }
+            .nav-tab .tab-icon {
+                font-size: 0.85rem;
+            }
+            .main-content {
+                padding: 12px 10px 30px;
+            }
+            .card-header {
+                padding: 14px 16px;
+            }
+            .card-body {
+                padding: 14px 16px;
+            }
+            .entry-row {
+                flex-direction: column;
+                gap: 6px;
+                padding: 10px 12px;
+            }
+            .entry-row input,
+            .entry-row .shares-cell {
+                width: 100%;
+                min-width: auto;
+                text-align: left;
+            }
+            .entry-row .shares-cell {
+                text-align: right;
+            }
+            .btn-remove {
+                align-self: flex-end;
+            }
+            .result-grid {
                 grid-template-columns: 1fr 1fr;
                 gap: 8px;
-                padding: 12px;
+                padding: 12px 14px;
             }
-            .metrics-grid {
-                gap: 8px;
-                padding: 12px;
+            .result-item .r-value {
+                font-size: 1rem;
             }
-            .metric-item {
-                padding: 10px 8px;
+            .result-item .r-value.large {
+                font-size: 1.3rem;
             }
-            .metric-item .m-value {
-                font-size: 16px;
+            .result-item.full-width .r-value {
+                font-size: 1.5rem;
             }
-            .detail-panel {
-                padding: 16px 12px 20px 12px;
+            .save-bar {
+                flex-direction: column;
             }
-            .detail-panel .client-row {
+            .save-bar input {
+                width: 100%;
+            }
+            .records-grid {
+                grid-template-columns: 1fr;
+                max-height: 55vh;
+                padding: 10px 12px;
+                gap: 10px;
+            }
+            .stats-row {
                 grid-template-columns: 1fr 1fr;
-                font-size: 11px;
-                gap: 4px;
+                gap: 8px;
             }
-            .detail-panel .client-row .cell.hide-mobile {
-                display: none;
+            .stat-card {
+                padding: 12px 14px;
             }
-            .metrics-list .metric-item .m-value {
-                font-size: 17px;
+            .stat-card .stat-value {
+                font-size: 1.3rem;
             }
-            .metrics-list .metric-item .m-label {
-                font-size: 13px;
+            .bar-chart {
+                height: 150px;
+                gap: 8px;
             }
-            .category-nav .cat-tab {
-                font-size: 12px;
-                padding: 5px 12px;
-                min-width: 44px;
+            .bar-col .bar {
+                max-width: 40px;
+            }
+            .records-toolbar {
+                padding: 10px 12px;
+                flex-direction: column;
+                gap: 8px;
+            }
+            .search-input-wrap {
+                width: 100%;
+            }
+        }
+        @media (max-width: 400px) {
+            .nav-tab {
+                padding: 6px 9px;
+                font-size: 0.7rem;
+                gap: 1px;
+            }
+            .nav-tab .tab-icon {
+                font-size: 0.75rem;
+            }
+            .nav-brand {
+                font-size: 0.8rem;
+            }
+            .nav-brand .brand-icon {
+                width: 26px;
+                height: 26px;
+                font-size: 0.8rem;
+            }
+            .btn {
+                padding: 8px 14px;
+                font-size: 0.78rem;
             }
         }
     </style>
 </head>
 <body>
 
-    <div id="toast" class="toast">📁 正在导出...</div>
-
-    <!-- ===== 客户明细弹窗 ===== -->
-    <div class="detail-overlay" id="detailOverlay">
-        <div class="detail-panel">
-            <div class="title">
-                <span id="detailTitle">客户明细</span>
-                <span class="close-btn" id="closeDetail">✕</span>
+    <!-- ==================== 导航栏 ==================== -->
+    <nav class="navbar" id="navbar">
+        <div class="navbar-inner">
+            <div class="nav-brand">
+                <div class="brand-icon">📊</div>
+                <span>基金持仓成本计算器</span>
             </div>
-            <div id="detailContent"></div>
-            <button class="export-btn" id="detailExportBtn">📥 导出客户明细</button>
-        </div>
-    </div>
-
-    <div class="app-container" id="app">
-        <!-- 头部 -->
-        <div class="header">
-            <h1>📊 数据看板</h1>
-            <div class="filter-trigger" id="filterTrigger"><span>⚙️</span> 筛选</div>
-        </div>
-
-        <!-- ===== 筛选浮层（主） ===== -->
-        <div class="filter-overlay" id="filterOverlay">
-            <div class="filter-panel">
-                <div class="title">筛选条件<span class="close-btn" id="closeFilter">✕</span></div>
-                <div class="filter-group"><label>客户身份</label><div class="filter-options" id="filterIdentity"><span class="tag active">五金门店</span><span class="tag">二级商</span><span class="tag">水电工</span><span class="tag">工程客户</span></div></div>
-                <div class="filter-group"><label>客户状态</label><div class="filter-options" id="filterStatus"><span class="tag active">启用</span><span class="tag">停用</span></div></div>
-                <div class="filter-group"><label>订单状态</label><div class="filter-options" id="filterOrder"><span class="tag">待审核</span><span class="tag">待发货</span><span class="tag active">配送中</span><span class="tag">已收货</span><span class="tag">已完成</span></div></div>
-                <div class="filter-group"><label>时间筛选</label><div class="filter-options" style="margin-bottom:10px;" id="filterTime"><span class="tag active">自然年</span><span class="tag">自然月</span><span class="tag">自定义</span></div><div class="date-range"><input type="date" value="2026-01-01" /><span style="color:#8c9ab0;">至</span><input type="date" value="2026-06-17" /></div></div>
-                <button class="apply-filter-btn" id="applyFilter">应用筛选</button>
+            <div class="nav-tabs" id="navTabs">
+                <button class="nav-tab active" data-tab="calculator" onclick="switchTab('calculator')">
+                    <span class="tab-icon">🧮</span> 计算器
+                </button>
+                <button class="nav-tab" data-tab="records" onclick="switchTab('records')">
+                    <span class="tab-icon">📋</span> 持仓记录
+                </button>
+                <button class="nav-tab" data-tab="overview" onclick="switchTab('overview')">
+                    <span class="tab-icon">📈</span> 数据概览
+                </button>
+                <button class="nav-tab" data-tab="tools" onclick="switchTab('tools')">
+                    <span class="tab-icon">⚙️</span> 工具
+                </button>
+            </div>
+            <div class="nav-actions">
+                <button class="btn-icon" onclick="switchTab('records')" title="查看记录" aria-label="查看记录">
+                    📁
+                    <span class="badge-dot" id="recordBadgeDot" style="display:none;"></span>
+                </button>
             </div>
         </div>
+    </nav>
 
-        <!-- ===== 指标筛选浮层 ===== -->
-        <div class="filter-overlay" id="indicatorFilterOverlay">
-            <div class="filter-panel">
-                <div class="title">选择显示指标<span class="close-btn" id="closeIndicatorFilter">✕</span></div>
-                <div class="indicator-list" id="indicatorList"></div>
-                <div class="indicator-actions"><button class="btn-cancel" id="indicatorCancel">取消</button><button class="btn-apply" id="indicatorApply">应用</button></div>
-            </div>
-        </div>
+    <!-- ==================== Toast容器 ==================== -->
+    <div class="toast-container" id="toastContainer"></div>
 
-        <!-- ============================================================ -->
-        <!-- ==================== 总览页面 ================================ -->
-        <div class="page-container active" id="pageOverview">
-            <div class="block-header"><h2>📈 核心指标</h2><button class="indicator-filter-btn" data-block="overview">📊 指标筛选</button></div>
-            <div class="metrics-scroll" id="overviewMetrics"></div>
-            <div class="charts-grid">
-                <div class="chart-box"><div class="chart-title">订单趋势 (近30天) <span>📈 同比 +12%</span></div><div class="chart-container" id="trendChart"></div></div>
-                <div class="chart-box"><div class="chart-title">支付金额占比 <span>自营 vs 联营</span></div><div class="chart-container pie" id="pieChart"></div></div>
-            </div>
-            <div class="list-section">
-                <div class="list-header"><h3>👤 近期注册客户</h3><button class="action-btn" id="exportBtn">📥 导出</button></div>
-                <div id="recentClientList"></div>
-                <div style="text-align:center; margin-top:12px; color:var(--primary); font-size:13px; font-weight:500; cursor:pointer;" id="viewAllBtn">查看全部客户明细 →</div>
-            </div>
-        </div>
+    <!-- ==================== 主内容区 ==================== -->
+    <div class="main-content" id="mainContent">
 
-        <!-- ==================== 区域页面 ================================ -->
-        <div class="page-container" id="pageRegion">
-            <div class="block-header"><h2>📍 区域统计</h2><button class="indicator-filter-btn" data-block="region">📊 指标筛选</button></div>
-            <div class="breadcrumb" id="regionBreadcrumb"></div>
-            <!-- 分类导航（分段控制器，sticky） -->
-            <div class="category-nav-wrapper">
-                <div class="category-nav" id="categoryNav"></div>
-            </div>
-            <div class="sub-region-tabs" id="subRegionTabs"></div>
-            <!-- 单列横排指标列表 -->
-            <div class="metrics-list" id="regionMetricsList"></div>
-        </div>
-
-        <!-- ==================== 服务商页面 ============================== -->
-        <div class="page-container" id="pageService">
-            <div class="block-header"><h2>🏢 服务商</h2><button class="indicator-filter-btn" data-block="service">📊 指标筛选</button></div>
-            <div style="margin:4px 0 8px 0; font-size:14px; color:var(--text-mid); background:white; padding:10px 16px; border-radius:16px; border:1px solid var(--border-color); box-shadow:var(--shadow-sm);">
-                📋 整体概况（所有指标，与下方筛选同步）
-            </div>
-            <div class="service-summary-grid" id="serviceSummaryGrid"></div>
-            <div class="selector-scroll" id="serviceSelector"></div>
-            <div class="metrics-grid" id="serviceMetricsGrid"></div>
-        </div>
-
-        <!-- 底部导航 -->
-        <div class="bottom-tab" id="bottomTab">
-            <div class="tab-item active" data-tab="overview"><span>📊</span> 总览</div>
-            <div class="tab-item" data-tab="region"><span>📍</span> 区域</div>
-            <div class="tab-item" data-tab="service"><span>🏢</span> 服务商</div>
-        </div>
-    </div>
-
-    <script>
-        // ================================================================
-        //  数据层 (全部静态数据)
-        // ================================================================
-
-        // ---- 指标字典 ----
-        const ALL_METRICS = [
-            '新增注册客户数', '全量注册客户数', '下单客户数', '总下单客户数',
-            '客户活跃率全量', '客户活跃率', '订单数', '订单金额', '订单均价',
-            '异常订单数', '客单价', '支付客户数', '支付订单数', '支付金额',
-            '支付金额占比', '支付客单价', '支付订单均价', '全量支付金额',
-            '报价单数', '报价单金额', '报价单支付金额',
-            '上线服务商数', '上线服务商总数', '打压服务商总数', '动销服务商数',
-            '服务商净增数', '终端门店净增数',
-            '自营商品销售金额', '自营商品动销数', '联营商品销售金额', '联营商品动销数',
-            '支付服务商开通数', '支付服务商开通总数'
-        ];
-
-        const OVERVIEW_METRICS = ['新增注册客户数', '下单客户数', '支付金额', '订单数', '异常订单数'];
-
-        // ---- 指标分类（用于区域），增加"全部" ----
-        const CATEGORY_MAP = {
-            '全部': ALL_METRICS,
-            '客户': ['新增注册客户数', '全量注册客户数', '下单客户数', '总下单客户数', '客户活跃率全量', '客户活跃率'],
-            '订单': ['订单数', '订单金额', '订单均价', '异常订单数', '报价单数', '报价单金额', '报价单支付金额'],
-            '支付': ['支付客户数', '支付订单数', '支付金额', '支付金额占比', '支付客单价', '支付订单均价', '全量支付金额'],
-            '商品': ['自营商品销售金额', '自营商品动销数', '联营商品销售金额', '联营商品动销数'],
-            '服务商': ['上线服务商数', '上线服务商总数', '打压服务商总数', '动销服务商数', '服务商净增数', '终端门店净增数', '支付服务商开通数',
-                '支付服务商开通总数'
-            ]
-        };
-        // 分类显示顺序（含图标）
-        const CATEGORY_ORDER = [
-            { key: '全部', icon: '📊' },
-            { key: '客户', icon: '👤' },
-            { key: '订单', icon: '📦' },
-            { key: '支付', icon: '💳' },
-            { key: '商品', icon: '🛍️' },
-            { key: '服务商', icon: '🏢' }
-        ];
-
-        // ---- 总览卡片数据 ----
-        const overviewData = [
-            { label: '📌 新增注册', key: '新增注册客户数', value: '1,280', change: '↑ 12%', sub: '全量 8,452' },
-            { label: '🛒 下单客户', key: '下单客户数', value: '856', change: '↑ 8%', sub: '活跃率 66.9%' },
-            { label: '💰 支付金额', key: '支付金额', value: '¥2.3M', change: '↑ 15%', sub: '占比 89%' },
-            { label: '📦 订单数', key: '订单数', value: '1,420', change: '↑ 6%', sub: '均价 ¥1,620' },
-            { label: '⚠️ 异常订单', key: '异常订单数', value: '23', change: '↑ 3%', sub: '点击查看详情', down: true }
-        ];
-
-        // ---- 区域树（完整三层） ----
-        const regionTree = {
-            id: 'root',
-            name: '全部区域',
-            children: [{
-                id: 'gd_fj',
-                name: '广东+福建',
-                metrics: generateMockMetrics('广东+福建'),
-                customers: generateCustomers('广东+福建', 18),
-                children: [{
-                    id: 'gd',
-                    name: '广东',
-                    metrics: generateMockMetrics('广东'),
-                    customers: generateCustomers('广东', 15),
-                    children: [
-                        { id: 'gz', name: '广州', metrics: generateMockMetrics('广州'), customers: generateCustomers(
-                                '广州', 12), children: [] },
-                        { id: 'sz', name: '深圳', metrics: generateMockMetrics('深圳'), customers: generateCustomers(
-                                '深圳', 10), children: [] }
-                    ]
-                }, {
-                    id: 'fj',
-                    name: '福建',
-                    metrics: generateMockMetrics('福建'),
-                    customers: generateCustomers('福建', 12),
-                    children: [
-                        { id: 'fz', name: '福州', metrics: generateMockMetrics('福州'), customers: generateCustomers(
-                                '福州', 8), children: [] },
-                        { id: 'xm', name: '厦门', metrics: generateMockMetrics('厦门'), customers: generateCustomers(
-                                '厦门', 8), children: [] }
-                    ]
-                }]
-            }, {
-                id: 'hn',
-                name: '华南',
-                metrics: generateMockMetrics('华南'),
-                customers: generateCustomers('华南', 14),
-                children: [
-                    { id: 'gx', name: '广西', metrics: generateMockMetrics('广西'), customers: generateCustomers(
-                            '广西', 10), children: [] },
-                    { id: 'hn2', name: '海南', metrics: generateMockMetrics('海南'), customers: generateCustomers(
-                            '海南', 8), children: [] }
-                ]
-            }, {
-                id: 'hd',
-                name: '华东',
-                metrics: generateMockMetrics('华东'),
-                customers: generateCustomers('华东', 16),
-                children: []
-            }]
-        };
-
-        function generateMockMetrics(regionName) {
-            const base = {
-                '新增注册客户数': Math.floor(Math.random() * 400 + 100) + '',
-                '全量注册客户数': (Math.floor(Math.random() * 30 + 5) / 10).toFixed(1) + '万',
-                '下单客户数': Math.floor(Math.random() * 3000 + 1000) + '',
-                '总下单客户数': (Math.floor(Math.random() * 20 + 5) / 10).toFixed(1) + '万',
-                '客户活跃率全量': (Math.random() * 20 + 40).toFixed(1) + '%',
-                '客户活跃率': (Math.random() * 10 + 10).toFixed(1) + '%',
-                '订单数': (Math.floor(Math.random() * 30 + 10) / 10).toFixed(1) + '万',
-                '订单金额': (Math.floor(Math.random() * 80 + 20) / 10).toFixed(1) + '亿',
-                '订单均价': (Math.floor(Math.random() * 1000 + 2000)) + '',
-                '异常订单数': Math.floor(Math.random() * 30 + 5) + '',
-                '客单价': (Math.floor(Math.random() * 10 + 10) / 10).toFixed(1) + '万',
-                '支付客户数': Math.floor(Math.random() * 2000 + 1000) + '',
-                '支付订单数': (Math.floor(Math.random() * 20 + 10) / 10).toFixed(1) + '万',
-                '支付金额': (Math.floor(Math.random() * 50 + 20) / 10).toFixed(1) + '亿',
-                '支付金额占比': (Math.random() * 15 + 80).toFixed(1) + '%',
-                '支付客单价': (Math.floor(Math.random() * 10 + 10) / 10).toFixed(1) + '万',
-                '支付订单均价': (Math.floor(Math.random() * 800 + 2000)) + '',
-                '全量支付金额': (Math.floor(Math.random() * 100 + 20) / 10).toFixed(1) + '亿',
-                '报价单数': (Math.floor(Math.random() * 10 + 5) / 10).toFixed(1) + '万',
-                '报价单金额': (Math.floor(Math.random() * 30 + 10) / 10).toFixed(1) + '亿',
-                '报价单支付金额': (Math.floor(Math.random() * 25 + 8) / 10).toFixed(1) + '亿',
-                '上线服务商数': Math.floor(Math.random() * 30 + 10) + '',
-                '上线服务商总数': Math.floor(Math.random() * 100 + 50) + '',
-                '打压服务商总数': Math.floor(Math.random() * 10 + 2) + '',
-                '动销服务商数': Math.floor(Math.random() * 20 + 8) + '',
-                '服务商净增数': '+' + Math.floor(Math.random() * 8 + 2),
-                '终端门店净增数': '+' + Math.floor(Math.random() * 30 + 10),
-                '自营商品销售金额': (Math.floor(Math.random() * 40 + 10) / 10).toFixed(1) + '亿',
-                '自营商品动销数': Math.floor(Math.random() * 500 + 200) + '',
-                '联营商品销售金额': (Math.floor(Math.random() * 10 + 2) / 10).toFixed(1) + '亿',
-                '联营商品动销数': Math.floor(Math.random() * 800 + 200) + '',
-                '支付服务商开通数': Math.floor(Math.random() * 15 + 5) + '',
-                '支付服务商开通总数': Math.floor(Math.random() * 50 + 20) + ''
-            };
-            return base;
-        }
-
-        function generateCustomers(regionName, count) {
-            const customers = [];
-            for (let i = 0; i < Math.min(count, 20); i++) {
-                customers.push({ name: `客户${i+1}`, region: regionName });
-            }
-            return customers;
-        }
-
-        // ---- 服务商数据 ----
-        const serviceData = {
-            'fs': {
-                name: '佛山恒达',
-                metrics: {
-                    '新增注册客户数': '120',
-                    '全量注册客户数': '850',
-                    '下单客户数': '320',
-                    '总下单客户数': '1,240',
-                    '客户活跃率全量': '37.6%',
-                    '客户活跃率': '25.8%',
-                    '订单数': '2,100',
-                    '订单金额': '340万',
-                    '订单均价': '1,619.05',
-                    '异常订单数': '5',
-                    '客单价': '1.06万',
-                    '支付客户数': '280',
-                    '支付订单数': '1,860',
-                    '支付金额': '298万',
-                    '支付金额占比': '87.6%',
-                    '支付客单价': '1.06万',
-                    '支付订单均价': '1,602.15',
-                    '全量支付金额': '980万',
-                    '报价单数': '460',
-                    '报价单金额': '82万',
-                    '报价单支付金额': '74万',
-                    '上线服务商数': '1',
-                    '上线服务商总数': '1',
-                    '打压服务商总数': '0',
-                    '动销服务商数': '1',
-                    '服务商净增数': '+1',
-                    '终端门店净增数': '+12',
-                    '自营商品销售金额': '210万',
-                    '自营商品动销数': '340',
-                    '联营商品销售金额': '52万',
-                    '联营商品动销数': '410',
-                    '支付服务商开通数': '1',
-                    '支付服务商开通总数': '1'
-                },
-                customers: generateCustomers('佛山恒达', 12)
-            },
-            'hz': {
-                name: '杭州云商',
-                metrics: {
-                    '新增注册客户数': '98',
-                    '全量注册客户数': '620',
-                    '下单客户数': '280',
-                    '总下单客户数': '1,020',
-                    '客户活跃率全量': '45.2%',
-                    '客户活跃率': '27.5%',
-                    '订单数': '1,800',
-                    '订单金额': '280万',
-                    '订单均价': '1,555.56',
-                    '异常订单数': '3',
-                    '客单价': '1.0万',
-                    '支付客户数': '245',
-                    '支付订单数': '1,560',
-                    '支付金额': '244万',
-                    '支付金额占比': '87.1%',
-                    '支付客单价': '0.99万',
-                    '支付订单均价': '1,564.10',
-                    '全量支付金额': '820万',
-                    '报价单数': '380',
-                    '报价单金额': '68万',
-                    '报价单支付金额': '61万',
-                    '上线服务商数': '1',
-                    '上线服务商总数': '1',
-                    '打压服务商总数': '0',
-                    '动销服务商数': '1',
-                    '服务商净增数': '+1',
-                    '终端门店净增数': '+10',
-                    '自营商品销售金额': '175万',
-                    '自营商品动销数': '280',
-                    '联营商品销售金额': '42万',
-                    '联营商品动销数': '350',
-                    '支付服务商开通数': '1',
-                    '支付服务商开通总数': '1'
-                },
-                customers: generateCustomers('杭州云商', 10)
-            },
-            'gz': {
-                name: '广州广源',
-                metrics: {
-                    '新增注册客户数': '85',
-                    '全量注册客户数': '540',
-                    '下单客户数': '230',
-                    '总下单客户数': '880',
-                    '客户活跃率全量': '42.6%',
-                    '客户活跃率': '26.1%',
-                    '订单数': '1,520',
-                    '订单金额': '235万',
-                    '订单均价': '1,546.05',
-                    '异常订单数': '4',
-                    '客单价': '1.02万',
-                    '支付客户数': '202',
-                    '支付订单数': '1,340',
-                    '支付金额': '206万',
-                    '支付金额占比': '87.7%',
-                    '支付客单价': '1.02万',
-                    '支付订单均价': '1,537.31',
-                    '全量支付金额': '710万',
-                    '报价单数': '320',
-                    '报价单金额': '57万',
-                    '报价单支付金额': '51万',
-                    '上线服务商数': '1',
-                    '上线服务商总数': '1',
-                    '打压服务商总数': '0',
-                    '动销服务商数': '1',
-                    '服务商净增数': '+1',
-                    '终端门店净增数': '+9',
-                    '自营商品销售金额': '148万',
-                    '自营商品动销数': '240',
-                    '联营商品销售金额': '36万',
-                    '联营商品动销数': '290',
-                    '支付服务商开通数': '1',
-                    '支付服务商开通总数': '1'
-                },
-                customers: generateCustomers('广州广源', 8)
-            },
-            'sh': {
-                name: '上海申通',
-                metrics: {
-                    '新增注册客户数': '67',
-                    '全量注册客户数': '430',
-                    '下单客户数': '190',
-                    '总下单客户数': '760',
-                    '客户活跃率全量': '44.2%',
-                    '客户活跃率': '25.0%',
-                    '订单数': '1,280',
-                    '订单金额': '198万',
-                    '订单均价': '1,546.88',
-                    '异常订单数': '2',
-                    '客单价': '1.04万',
-                    '支付客户数': '168',
-                    '支付订单数': '1,120',
-                    '支付金额': '173万',
-                    '支付金额占比': '87.4%',
-                    '支付客单价': '1.03万',
-                    '支付订单均价': '1,544.64',
-                    '全量支付金额': '620万',
-                    '报价单数': '270',
-                    '报价单金额': '48万',
-                    '报价单支付金额': '43万',
-                    '上线服务商数': '1',
-                    '上线服务商总数': '1',
-                    '打压服务商总数': '0',
-                    '动销服务商数': '1',
-                    '服务商净增数': '+1',
-                    '终端门店净增数': '+7',
-                    '自营商品销售金额': '125万',
-                    '自营商品动销数': '190',
-                    '联营商品销售金额': '30万',
-                    '联营商品动销数': '240',
-                    '支付服务商开通数': '1',
-                    '支付服务商开通总数': '1'
-                },
-                customers: generateCustomers('上海申通', 9)
-            }
-        };
-
-        // ---- 近期注册客户（总览） ----
-        const recentClients = [
-            { name: '张伟', tag: '五金门店', region: '广东·佛山', date: '2026-06-15', amount: '¥12,800' },
-            { name: '李婷', tag: '水电工', region: '浙江·杭州', date: '2026-06-14', amount: '¥8,450' },
-            { name: '王强', tag: '二级商', region: '江苏·南京', date: '2026-06-13', amount: '¥5,200' }
-        ];
-
-        // ================================================================
-        //  状态管理
-        // ================================================================
-        const filterState = {
-            identity: ['五金门店'],
-            status: ['启用'],
-            order: ['配送中'],
-            timeRange: { start: '2026-01-01', end: '2026-06-17' }
-        };
-
-        // 每个板块选中的指标
-        const selectedMetrics = {
-            overview: [...OVERVIEW_METRICS],
-            region: [...CATEGORY_MAP['全部']], // 默认显示全部
-            service: [...ALL_METRICS]
-        };
-
-        // 当前区域节点
-        let currentRegionNode = regionTree.children[0];
-        // 当前区域分类（默认全部）
-        let currentCategory = '全部';
-        // 当前服务商key
-        let currentServiceKey = 'fs';
-
-        // ================================================================
-        //  DOM 引用
-        // ================================================================
-        const $ = id => document.getElementById(id);
-        const overviewMetricsEl = $('overviewMetrics');
-        const regionMetricsList = $('regionMetricsList');
-        const serviceSummaryGrid = $('serviceSummaryGrid');
-        const serviceMetricsGrid = $('serviceMetricsGrid');
-        const regionBreadcrumb = $('regionBreadcrumb');
-        const subRegionTabs = $('subRegionTabs');
-        const serviceSelector = $('serviceSelector');
-        const recentClientList = $('recentClientList');
-        const categoryNav = $('categoryNav');
-
-        // ================================================================
-        //  工具函数
-        // ================================================================
-        function showToast(msg, duration = 1800) {
-            const toast = $('toast');
-            toast.textContent = msg;
-            toast.classList.add('show');
-            clearTimeout(toast._timer);
-            toast._timer = setTimeout(() => toast.classList.remove('show'), duration);
-        }
-
-        function findRegionNode(root, id) {
-            if (root.id === id) return root;
-            if (root.children) {
-                for (let child of root.children) {
-                    const found = findRegionNode(child, id);
-                    if (found) return found;
-                }
-            }
-            return null;
-        }
-
-        function getRegionPath(root, target) {
-            function dfs(node, path) {
-                if (node.id === target.id) { path.push(node); return path; }
-                if (node.children) {
-                    for (let child of node.children) {
-                        const result = dfs(child, [...path, node]);
-                        if (result) return result;
-                    }
-                }
-                return null;
-            }
-            return dfs(root, []);
-        }
-
-        function generateDetailRows(customers, regionName) {
-            const tags = ['五金门店', '二级商', '水电工', '工程客户'];
-            const accounts = ['zhangwei_001', 'liting_002', 'wangqiang_003', 'liuyang_004', 'chenjing_005',
-                'yangfan_006', 'zhaolei_007', 'huangli_008', 'zhouming_009', 'wuxue_010'
-            ];
-            const reasons = ['经营不善', '主动申请停用', '违规操作', '合同到期', '', '', ''];
-            const rows = [];
-            for (let i = 0; i < customers.length && i < 20; i++) {
-                const idx = i % accounts.length;
-                const isActive = i % 3 !== 0;
-                rows.push({
-                    name: customers[i].name || `客户${i+1}`,
-                    account: accounts[idx] + (i + 1),
-                    tag: tags[i % tags.length],
-                    region: regionName || '华南',
-                    auditTime: `2026-06-${String(12 + (i % 8)).padStart(2, '0')}`,
-                    status: isActive ? '启用' : '停用',
-                    stopReason: isActive ? '' : (reasons[i % reasons.length] || '其他原因'),
-                    historyOrders: Math.floor(Math.random() * 50) + 5,
-                    historyAmount: (Math.floor(Math.random() * 20000) + 5000).toLocaleString(),
-                    periodOrders: Math.floor(Math.random() * 20) + 1,
-                    periodAmount: (Math.floor(Math.random() * 8000) + 1000).toLocaleString()
-                });
-            }
-            return rows;
-        }
-
-        function openDetail(title, customers, regionName) {
-            const overlay = $('detailOverlay');
-            $('detailTitle').textContent = title;
-            const rows = generateDetailRows(customers, regionName);
-            let html = `
-                <div class="client-row header-row">
-                    <span class="cell">客户名称</span>
-                    <span class="cell">账号</span>
-                    <span class="cell hide-mobile">审核时间</span>
-                    <span class="cell hide-mobile">状态</span>
-                    <span class="cell">历史下单数</span>
-                    <span class="cell">历史金额</span>
-                    <span class="cell">期间下单数</span>
-                    <span class="cell">期间金额</span>
+        <!-- ========== Tab 1: 计算器 ========== -->
+        <div class="tab-panel active" id="panel-calculator">
+            <div class="card">
+                <div class="card-header">
+                    <h2><span class="dot indigo"></span>持仓成本计算</h2>
+                    <button class="btn btn-ghost btn-sm" onclick="resetCalculator()" title="清空计算器">
+                        🔄 清空重算
+                    </button>
                 </div>
-            `;
-            rows.forEach(r => {
-                html += `
-                    <div class="client-row">
-                        <span class="cell">${r.name} <span class="tag">${r.tag}</span></span>
-                        <span class="cell">${r.account}</span>
-                        <span class="cell hide-mobile">${r.auditTime}</span>
-                        <span class="cell hide-mobile"><span class="status ${r.status === '启用' ? 'active' : 'inactive'}">${r.status}</span>${r.stopReason ? ' ' + r.stopReason : ''}</span>
-                        <span class="cell">${r.historyOrders}</span>
-                        <span class="cell">¥${r.historyAmount}</span>
-                        <span class="cell">${r.periodOrders}</span>
-                        <span class="cell">¥${r.periodAmount}</span>
+                <div class="card-body">
+                    <!-- 原有持仓 -->
+                    <div class="section-label">
+                        📋 原有持仓记录 <span class="count-badge" id="entryCount">2笔</span>
                     </div>
-                `;
-            });
-            $('detailContent').innerHTML = html;
-            overlay.classList.add('active');
-        }
+                    <div id="originalEntriesContainer"></div>
+                    <button class="btn btn-outline btn-sm" onclick="addEntryRow()" style="margin-bottom:12px;">
+                        ➕ 添加一笔持仓
+                    </button>
 
-        function closeDetail() {
-            $('detailOverlay').classList.remove('active');
-        }
-        $('closeDetail').addEventListener('click', closeDetail);
-        $('detailOverlay').addEventListener('click', function(e) {
-            if (e.target === this) closeDetail();
-        });
-        $('detailExportBtn').addEventListener('click', function() {
-            showToast('📁 正在导出客户明细 Excel ...', 1200);
-            setTimeout(() => showToast('✅ 导出成功！'), 1200);
-        });
+                    <!-- 预期购入 -->
+                    <div class="section-label" style="margin-top:6px;">🎯 预期购入（新增）</div>
+                    <div class="entry-row highlight-new">
+                        <span class="row-num">🆕</span>
+                        <input type="number" id="newAmount" class="input-amount" placeholder="预期购入金额（元）"
+                        step="0.01" min="0" oninput="autoCalc()">
+                        <input type="number" id="newPrice" class="input-price" placeholder="预期购入单价（元）"
+                        step="0.0001" min="0.0001" oninput="autoCalc()">
+                        <span class="shares-cell placeholder" id="newShares">— 份</span>
+                    </div>
 
-        // ================================================================
-        //  渲染函数
-        // ================================================================
-
-        // ---- 总览指标卡片 ----
-        function renderOverview() {
-            const selected = selectedMetrics.overview;
-            const fragment = document.createDocumentFragment();
-            overviewData.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'metric-card';
-                card.dataset.metric = item.key;
-                card.style.display = selected.includes(item.key) ? '' : 'none';
-                card.innerHTML = `
-                    <div class="label">${item.label}</div>
-                    <div class="value">${item.value}</div>
-                    <span class="change ${item.down ? 'down' : ''}">${item.change}</span>
-                    <div class="sub">${item.sub}</div>
-                `;
-                card.addEventListener('click', function() {
-                    const key = this.dataset.metric;
-                    if (key === '异常订单数') showToast('⚠️ 跳转异常订单详情');
-                    else if (key === '新增注册客户数') showToast('👤 展示注册客户明细');
-                    else if (key === '支付金额') showToast('💳 支付明细');
-                    else showToast('📊 查看详细数据');
-                });
-                fragment.appendChild(card);
-            });
-            overviewMetricsEl.innerHTML = '';
-            overviewMetricsEl.appendChild(fragment);
-        }
-
-        // ---- 近期客户列表 ----
-        function renderRecentClients() {
-            let html = '';
-            recentClients.forEach(c => {
-                html += `
-                    <div class="client-item">
-                        <div class="client-info">
-                            <div class="name">${c.name} <span class="tag">${c.tag}</span></div>
-                            <div class="detail">${c.region} | ${c.date}</div>
+                    <!-- 结果展示 -->
+                    <div class="result-grid" id="resultBox">
+                        <div class="result-item">
+                            <div class="r-label">📦 原有总金额</div>
+                            <div class="r-value" id="totalOrigAmount">¥0.00</div>
                         </div>
-                        <div class="client-amount">${c.amount}</div>
+                        <div class="result-item">
+                            <div class="r-label">📐 原有总份额</div>
+                            <div class="r-value" id="totalOrigShares">0.0000 份</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="r-label">💰 含预期总金额</div>
+                            <div class="r-value green" id="grandTotalAmount">¥0.00</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="r-label">📐 含预期总份额</div>
+                            <div class="r-value green" id="grandTotalShares">0.0000 份</div>
+                        </div>
+                        <div class="result-item full-width">
+                            <div class="r-label">⭐ 最终持仓单价（加权平均）</div>
+                            <div class="r-value large" id="finalPrice">—</div>
+                        </div>
                     </div>
-                `;
-            });
-            recentClientList.innerHTML = html;
+
+                    <!-- 保存区域 -->
+                    <div class="save-bar">
+                        <input type="text" id="fundCode" placeholder="基金代码（可选）" maxlength="20"
+                        style="max-width:160px;">
+                        <input type="text" id="fundName" placeholder="基金名称（可选）" maxlength="50"
+                        style="max-width:220px;">
+                        <button class="btn btn-primary" id="btnSave" onclick="saveRecord()">
+                            💾 保存记录
+                        </button>
+                        <button class="btn btn-ghost btn-sm" id="btnCancelEdit" onclick="cancelEdit()"
+                        style="display:none;">
+                            ✕ 取消编辑
+                        </button>
+                        <input type="hidden" id="editingId" value="">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== Tab 2: 持仓记录 ========== -->
+        <div class="tab-panel" id="panel-records">
+            <div class="card">
+                <div class="card-header">
+                    <h2><span class="dot teal"></span>已保存的持仓记录</h2>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <button class="btn btn-outline btn-sm" onclick="exportAllRecords()">📥 导出JSON</button>
+                        <button class="btn btn-ghost btn-sm" onclick="refreshRecords()">🔄 刷新</button>
+                    </div>
+                </div>
+                <div class="records-toolbar">
+                    <div class="search-input-wrap">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="searchInput" placeholder="搜索基金代码或名称..."
+                        oninput="renderRecordsList()">
+                    </div>
+                    <span style="font-size:0.78rem;color:var(--text-muted);white-space:nowrap;" id="recordCountLabel">
+                        共 0 条记录
+                    </span>
+                </div>
+                <div class="records-grid" id="recordsGrid">
+                    <div class="empty-state">
+                        <div class="empty-icon">📭</div>
+                        <p>暂无保存的记录</p>
+                        <p style="font-size:0.78rem;color:#cbd5e1;">在计算器中完成计算后点击"保存记录"</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== Tab 3: 数据概览 ========== -->
+        <div class="tab-panel" id="panel-overview">
+            <div class="stats-row" id="statsRow">
+                <div class="stat-card primary-border">
+                    <div class="stat-icon">📁</div>
+                    <div class="stat-value" id="statTotalRecords">0</div>
+                    <div class="stat-label">总记录数</div>
+                </div>
+                <div class="stat-card accent">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-value" id="statTotalAmount">¥0</div>
+                    <div class="stat-label">总投入金额（含预期）</div>
+                </div>
+                <div class="stat-card success-border">
+                    <div class="stat-icon">⭐</div>
+                    <div class="stat-value" id="statAvgPrice">—</div>
+                    <div class="stat-label">平均持仓单价</div>
+                </div>
+                <div class="stat-card warning-border">
+                    <div class="stat-icon">🏷️</div>
+                    <div class="stat-value" id="statUniqueFunds">0</div>
+                    <div class="stat-label">不重复基金数</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2><span class="dot indigo"></span>最近记录持仓单价对比</h2>
+                    <span style="font-size:0.75rem;color:var(--text-muted);">最近8条</span>
+                </div>
+                <div class="card-body compact">
+                    <div class="bar-chart" id="barChartContainer">
+                        <div class="empty-state" style="width:100%;">
+                            <p style="color:#cbd5e1;">暂无数据可展示</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== Tab 4: 工具 ========== -->
+        <div class="tab-panel" id="panel-tools">
+            <div class="card">
+                <div class="card-header">
+                    <h2><span class="dot amber"></span>数据工具</h2>
+                </div>
+                <div class="card-body">
+                    <div class="tool-section">
+                        <h3>📥 导出数据</h3>
+                        <p>将所有保存的基金记录导出为JSON文件，可用于备份或迁移。</p>
+                        <button class="btn btn-outline" onclick="exportAllRecords()">📥 导出全部记录</button>
+                    </div>
+                    <div class="tool-section">
+                        <h3>📤 导入数据</h3>
+                        <p>从之前导出的JSON备份文件中恢复数据。拖拽文件到下方区域或点击选择。</p>
+                        <div id="dropZone"
+                        style="border:2px dashed #cbd5e1;border-radius:var(--radius-lg);padding:30px;text-align:center;cursor:pointer;transition:var(--transition-fast);background:#fafbfc;"
+                        ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)"
+                        onclick="document.getElementById('fileInput').click()">
+                        <span style="font-size:2rem;">📂</span>
+                        <p style="margin-top:6px;color:var(--text-secondary);">拖拽 .json 文件到这里</p>
+                        <p style="font-size:0.7rem;color:#cbd5e1;">或点击选择文件</p>
+                    </div>
+                    <input type="file" id="fileInput" accept=".json" style="display:none;"
+                    onchange="handleFileSelect(event)">
+                </div>
+                <div class="tool-section" style="margin-top:16px;">
+                    <h3>🗑️ 清空数据</h3>
+                    <p style="color:var(--danger);">此操作将删除所有本地保存的基金记录，不可恢复。建议先导出备份。</p>
+                    <button class="btn btn-danger" onclick="clearAllData()">🗑️ 清空全部记录</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ==================== 数据库层 ====================
+        const STORAGE_KEY = 'fund_calc_records_v3';
+        const DB_VERSION = 3;
+
+        function getDB() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return [];
+                const data = JSON.parse(raw);
+                return Array.isArray(data) ? data : [];
+            } catch (e) { return []; }
         }
 
-        // ---- 区域分类导航（分段控制器） ----
-        function renderCategoryNav() {
-            categoryNav.innerHTML = '';
-            CATEGORY_ORDER.forEach(({ key, icon }) => {
-                const tab = document.createElement('button');
-                tab.className = 'cat-tab' + (key === currentCategory ? ' active' : '');
-                tab.textContent = `${icon} ${key}`;
-                tab.dataset.category = key;
-                tab.addEventListener('click', function() {
-                    const category = this.dataset.category;
-                    if (category === currentCategory) return;
-                    currentCategory = category;
-                    // 更新选中指标
-                    selectedMetrics.region = [...CATEGORY_MAP[category]];
-                    renderRegion();
-                    // 更新高亮
-                    document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
-                    this.classList.add('active');
-                });
-                categoryNav.appendChild(tab);
-            });
-        }
-
-        // ---- 区域 ----
-        function renderRegion() {
-            const node = currentRegionNode;
-            // 面包屑
-            const path = getRegionPath(regionTree, node);
-            let breadHtml = '';
-            if (path) {
-                path.forEach((n, idx) => {
-                    if (idx > 0) breadHtml += `<span class="sep"> › </span>`;
-                    if (idx === path.length - 1) {
-                        breadHtml += `<span class="crumb current">${n.name}</span>`;
-                    } else {
-                        breadHtml += `<span class="crumb" data-id="${n.id}">${n.name}</span>`;
-                    }
-                });
-            } else {
-                breadHtml = `<span class="crumb current">${node.name}</span>`;
+        function saveDB(records) {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+            } catch (e) {
+                if (e.name === 'QuotaExceededError') {
+                    showToast('存储空间不足，请清理旧记录或导出备份', 'error');
+                }
             }
-            regionBreadcrumb.innerHTML = breadHtml;
-            regionBreadcrumb.querySelectorAll('.crumb:not(.current)').forEach(el => {
-                el.addEventListener('click', function() {
-                    const id = this.dataset.id;
-                    const target = findRegionNode(regionTree, id);
-                    if (target) {
-                        currentRegionNode = target;
-                        renderRegion();
-                    }
-                });
+        }
+
+        function genId() {
+            return Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 9);
+        }
+
+        function dbFindAll() {
+            return getDB().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        }
+
+        function dbFindById(id) {
+            return getDB().find(r => r.id === id) || null;
+        }
+
+        function dbInsert(record) {
+            const records = getDB();
+            record.id = genId();
+            record.createdAt = new Date().toISOString();
+            record.updatedAt = record.createdAt;
+            records.unshift(record);
+            saveDB(records);
+            return record;
+        }
+
+        function dbUpdate(id, data) {
+            const records = getDB();
+            const idx = records.findIndex(r => r.id === id);
+            if (idx === -1) return null;
+            records[idx] = { ...records[idx], ...data, id: records[idx].id, createdAt: records[idx].createdAt,
+                updatedAt: new Date().toISOString() };
+            saveDB(records);
+            return records[idx];
+        }
+
+        function dbDelete(id) {
+            const records = getDB();
+            const filtered = records.filter(r => r.id !== id);
+            saveDB(filtered);
+            return filtered.length < records.length;
+        }
+
+        function dbSearch(kw) {
+            if (!kw || !kw.trim()) return dbFindAll();
+            const k = kw.trim().toLowerCase();
+            return getDB().filter(r =>
+                (r.code && r.code.toLowerCase().includes(k)) ||
+                (r.name && r.name.toLowerCase().includes(k))
+            ).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        }
+
+        function dbExport() {
+            return JSON.stringify(getDB(), null, 2);
+        }
+
+        function dbImport(jsonStr) {
+            const data = JSON.parse(jsonStr);
+            if (!Array.isArray(data)) throw new Error('格式错误：需要数组');
+            for (const item of data) {
+                if (!item.originalEntries || !item.newEntry || typeof item.totalAmount !== 'number') {
+                    throw new Error('数据格式不兼容');
+                }
+            }
+            const existing = getDB();
+            const existingIds = new Set(existing.map(r => r.id));
+            let importedCount = 0;
+            for (const item of data) {
+                if (!item.id || !existingIds.has(item.id)) {
+                    if (!item.id) item.id = genId();
+                    if (!item.createdAt) item.createdAt = new Date().toISOString();
+                    if (!item.updatedAt) item.updatedAt = item.createdAt;
+                    existing.unshift(item);
+                    existingIds.add(item.id);
+                    importedCount++;
+                }
+            }
+            saveDB(existing);
+            return importedCount;
+        }
+
+        // ==================== Toast ====================
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `${icons[type] || ''} ${msg}`;
+            container.appendChild(toast);
+            setTimeout(() => { if (toast.parentNode) toast.remove(); }, 2900);
+        }
+
+        // ==================== 导航切换 ====================
+        let currentTab = 'calculator';
+
+        function switchTab(tabName) {
+            currentTab = tabName;
+            // 更新导航按钮
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            const activeTab = document.querySelector(`.nav-tab[data-tab="${tabName}"]`);
+            if (activeTab) activeTab.classList.add('active');
+            // 更新面板
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            const panel = document.getElementById(`panel-${tabName}`);
+            if (panel) panel.classList.add('active');
+            // 切换到概览时刷新统计数据
+            if (tabName === 'overview') refreshOverview();
+            if (tabName === 'records') refreshRecords();
+            // 滚动到顶部
+            document.getElementById('mainContent').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // 保存当前tab到session
+            try { sessionStorage.setItem('fund_calc_active_tab', tabName); } catch (e) {}
+        }
+
+        // ==================== 计算器逻辑 ====================
+        let entryRowCount = 2;
+        const MAX_ROWS = 20;
+
+        function createEntryRow(idx) {
+            const row = document.createElement('div');
+            row.className = 'entry-row';
+            row.setAttribute('data-index', idx);
+            row.innerHTML = `
+                <span class="row-num">${idx + 1}</span>
+                <input type="number" class="input-amount" placeholder="金额（元）" step="0.01" min="0"
+                    oninput="autoCalc()" data-type="amount" data-index="${idx}">
+                <input type="number" class="input-price" placeholder="单价（元）" step="0.0001" min="0.0001"
+                    oninput="autoCalc()" data-type="price" data-index="${idx}">
+                <span class="shares-cell placeholder" data-type="shares" data-index="${idx}">— 份</span>
+                <button class="btn-remove" onclick="removeEntryRow(this, ${idx})"
+                    title="删除此笔" ${entryRowCount <= 1 ? 'disabled' : ''}>✕</button>
+            `;
+            return row;
+        }
+
+        function renderEntryRows(count) {
+            const container = document.getElementById('originalEntriesContainer');
+            if (!container) return;
+            container.innerHTML = '';
+            for (let i = 0; i < count; i++) {
+                container.appendChild(createEntryRow(i));
+            }
+            entryRowCount = count;
+            updateBadgeAndButtons();
+        }
+
+        function addEntryRow() {
+            if (entryRowCount >= MAX_ROWS) { showToast(`最多支持${MAX_ROWS}笔原有持仓`, 'warning'); return; }
+            const container = document.getElementById('originalEntriesContainer');
+            const newIdx = entryRowCount;
+            container.appendChild(createEntryRow(newIdx));
+            entryRowCount++;
+            updateBadgeAndButtons();
+            const newRow = container.lastElementChild;
+            if (newRow) newRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function removeEntryRow(btn, idx) {
+            if (entryRowCount <= 1) { showToast('至少保留一笔原有持仓', 'warning'); return; }
+            const row = btn.closest('.entry-row');
+            if (row) {
+                row.style.opacity = '0';
+                row.style.transform = 'translateX(-20px)';
+                row.style.transition = '0.2s ease';
+                setTimeout(() => {
+                    row.remove();
+                    entryRowCount--;
+                    reindexRows();
+                    updateBadgeAndButtons();
+                    autoCalc();
+                }, 200);
+            }
+        }
+
+        function reindexRows() {
+            const container = document.getElementById('originalEntriesContainer');
+            const rows = container.querySelectorAll('.entry-row');
+            rows.forEach((row, i) => {
+                row.setAttribute('data-index', i);
+                row.querySelector('.row-num').textContent = i + 1;
+                row.querySelectorAll('input').forEach(inp => inp.setAttribute('data-index', i));
+                row.querySelector('.shares-cell').setAttribute('data-index', i);
+                const btn = row.querySelector('.btn-remove');
+                if (btn) btn.setAttribute('onclick', `removeEntryRow(this, ${i})`);
+            });
+            entryRowCount = rows.length;
+        }
+
+        function updateBadgeAndButtons() {
+            const badge = document.getElementById('entryCount');
+            if (badge) badge.textContent = entryRowCount + '笔';
+            const container = document.getElementById('originalEntriesContainer');
+            if (!container) return;
+            const btns = container.querySelectorAll('.btn-remove');
+            btns.forEach(b => { b.disabled = entryRowCount <= 1; });
+        }
+
+        function getOriginalEntriesData() {
+            const container = document.getElementById('originalEntriesContainer');
+            if (!container) return [];
+            const rows = container.querySelectorAll('.entry-row');
+            const entries = [];
+            rows.forEach(row => {
+                const amt = parseFloat(row.querySelector('.input-amount')?.value) || 0;
+                const prc = parseFloat(row.querySelector('.input-price')?.value) || 0;
+                const shares = (prc > 0 && amt > 0) ? amt / prc : 0;
+                if (amt > 0 || prc > 0) entries.push({ amount: amt, price: prc, shares });
+            });
+            return entries;
+        }
+
+        function autoCalc() {
+            const entries = getOriginalEntriesData();
+            let totalOrigAmt = 0,
+                totalOrigShr = 0;
+            entries.forEach(e => {
+                if (e.amount > 0 && e.price > 0) { totalOrigAmt += e.amount;
+                    totalOrigShr += e.shares; }
             });
 
-            // 子区域 tabs
-            subRegionTabs.innerHTML = '';
-            if (node.children && node.children.length > 0) {
-                node.children.forEach(child => {
-                    const tab = document.createElement('span');
-                    tab.className = 'selector-tab';
-                    tab.textContent = child.name;
-                    tab.dataset.id = child.id;
-                    tab.addEventListener('click', function() {
-                        const id = this.dataset.id;
-                        const target = findRegionNode(regionTree, id);
-                        if (target) {
-                            currentRegionNode = target;
-                            renderRegion();
+            // 更新每行份额
+            const container = document.getElementById('originalEntriesContainer');
+            if (container) {
+                container.querySelectorAll('.entry-row').forEach(row => {
+                    const amt = parseFloat(row.querySelector('.input-amount')?.value) || 0;
+                    const prc = parseFloat(row.querySelector('.input-price')?.value) || 0;
+                    const cell = row.querySelector('.shares-cell');
+                    if (cell) {
+                        if (amt > 0 && prc > 0) {
+                            cell.textContent = (amt / prc).toFixed(4) + ' 份';
+                            cell.classList.remove('placeholder');
+                        } else {
+                            cell.textContent = '— 份';
+                            cell.classList.add('placeholder');
                         }
-                    });
-                    subRegionTabs.appendChild(tab);
+                    }
                 });
+            }
+
+            const newAmt = parseFloat(document.getElementById('newAmount')?.value) || 0;
+            const newPrc = parseFloat(document.getElementById('newPrice')?.value) || 0;
+            const newShr = (newPrc > 0 && newAmt > 0) ? newAmt / newPrc : 0;
+            const newCell = document.getElementById('newShares');
+            if (newCell) {
+                if (newAmt > 0 && newPrc > 0) {
+                    newCell.textContent = newShr.toFixed(4) + ' 份';
+                    newCell.classList.remove('placeholder');
+                } else {
+                    newCell.textContent = '— 份';
+                    newCell.classList.add('placeholder');
+                }
+            }
+
+            const grandAmt = totalOrigAmt + newAmt;
+            const grandShr = totalOrigShr + newShr;
+            const finalPrc = grandShr > 0 ? grandAmt / grandShr : 0;
+
+            const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+            setEl('totalOrigAmount', '¥' + totalOrigAmt.toFixed(2));
+            setEl('totalOrigShares', totalOrigShr.toFixed(4) + ' 份');
+            setEl('grandTotalAmount', '¥' + grandAmt.toFixed(2));
+            setEl('grandTotalShares', grandShr.toFixed(4) + ' 份');
+            const fpEl = document.getElementById('finalPrice');
+            if (fpEl) {
+                if (grandShr > 0 && grandAmt > 0) {
+                    fpEl.textContent = '¥' + finalPrc.toFixed(4);
+                    fpEl.style.color = '';
+                } else {
+                    fpEl.textContent = '—';
+                    fpEl.style.color = '#94a3b8';
+                }
+            }
+        }
+
+        function getCalculatorData() {
+            const entries = getOriginalEntriesData();
+            const newAmt = parseFloat(document.getElementById('newAmount')?.value) || 0;
+            const newPrc = parseFloat(document.getElementById('newPrice')?.value) || 0;
+            const newShr = (newPrc > 0 && newAmt > 0) ? newAmt / newPrc : 0;
+            let totalOrigAmt = 0,
+                totalOrigShr = 0;
+            entries.forEach(e => { if (e.amount > 0 && e.price > 0) { totalOrigAmt += e.amount;
+                    totalOrigShr += e.shares; } });
+            const grandAmt = totalOrigAmt + newAmt;
+            const grandShr = totalOrigShr + newShr;
+            return {
+                originalEntries: entries.filter(e => e.amount > 0 && e.price > 0),
+                newEntry: { amount: newAmt, price: newPrc, shares: newShr },
+                totalOrigAmount: totalOrigAmt,
+                totalOrigShares: totalOrigShr,
+                grandTotalAmount: grandAmt,
+                grandTotalShares: grandShr,
+                finalPrice: grandShr > 0 ? grandAmt / grandShr : 0,
+                totalAmount: grandAmt,
+                totalShares: grandShr,
+            };
+        }
+
+        function populateCalculator(record) {
+            const container = document.getElementById('originalEntriesContainer');
+            if (!container) return;
+            container.innerHTML = '';
+            const orig = record.originalEntries || [];
+            const count = Math.max(orig.length, 1);
+            entryRowCount = count;
+            for (let i = 0; i < count; i++) {
+                const row = createEntryRow(i);
+                container.appendChild(row);
+                if (orig[i]) {
+                    row.querySelector('.input-amount').value = orig[i].amount;
+                    row.querySelector('.input-price').value = orig[i].price;
+                }
+            }
+            if (record.newEntry) {
+                document.getElementById('newAmount').value = record.newEntry.amount || '';
+                document.getElementById('newPrice').value = record.newEntry.price || '';
+            }
+            document.getElementById('fundCode').value = record.code || '';
+            document.getElementById('fundName').value = record.name || '';
+            updateBadgeAndButtons();
+            autoCalc();
+            switchTab('calculator');
+            document.getElementById('mainContent').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function resetCalculator() {
+            document.getElementById('fundCode').value = '';
+            document.getElementById('fundName').value = '';
+            document.getElementById('newAmount').value = '';
+            document.getElementById('newPrice').value = '';
+            document.getElementById('editingId').value = '';
+            document.getElementById('btnSave').textContent = '💾 保存记录';
+            document.getElementById('btnSave').className = 'btn btn-primary';
+            document.getElementById('btnCancelEdit').style.display = 'none';
+            renderEntryRows(2);
+            autoCalc();
+            document.querySelectorAll('.record-card-item.editing-highlight').forEach(c => c.classList.remove(
+                'editing-highlight'));
+            document.getElementById('mainContent').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function cancelEdit() {
+            resetCalculator();
+            showToast('已取消编辑，计算器已清空', 'info');
+        }
+
+        // ==================== 保存记录 ====================
+        function saveRecord() {
+            const data = getCalculatorData();
+            const hasOrig = data.originalEntries.length > 0;
+            const hasNew = data.newEntry.amount > 0 && data.newEntry.price > 0;
+            if (!hasOrig && !hasNew) { showToast('请至少输入一笔有效的持仓数据', 'error'); return; }
+            const code = document.getElementById('fundCode')?.value?.trim() || '';
+            const name = document.getElementById('fundName')?.value?.trim() || '';
+            const editingId = document.getElementById('editingId')?.value || '';
+            const recordData = {
+                code,
+                name,
+                originalEntries: data.originalEntries,
+                newEntry: data.newEntry,
+                totalAmount: data.grandTotalAmount,
+                totalShares: data.grandTotalShares,
+                finalPrice: data.finalPrice,
+            };
+            if (editingId) {
+                const updated = dbUpdate(editingId, recordData);
+                if (updated) { showToast('✅ 记录已更新！', 'success');
+                    resetCalculator();
+                    refreshAll(); } else showToast('更新失败', 'error');
             } else {
-                subRegionTabs.innerHTML =
-                    '<span style="font-size:13px; color:var(--text-light); padding:4px 0;">已到最末级</span>';
+                dbInsert(recordData);
+                showToast('✅ 记录已保存！', 'success');
+                document.getElementById('fundCode').value = '';
+                document.getElementById('fundName').value = '';
+                refreshAll();
             }
-
-            // 指标列表（单列横排）
-            const metrics = node.metrics || {};
-            const customers = node.customers || [];
-            const regionName = node.name || '区域';
-            const selected = selectedMetrics.region;
-            const fragment = document.createDocumentFragment();
-            selected.forEach(key => {
-                const val = metrics[key] || '--';
-                const div = document.createElement('div');
-                div.className = 'metric-item';
-                div.dataset.metric = key;
-                div.innerHTML = `
-                    <span class="m-label">${key}</span>
-                    <span class="m-value">${val}</span>
-                `;
-                if (key === '全量注册客户数' && customers.length > 0) {
-                    div.style.cursor = 'pointer';
-                    div.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                        openDetail(`${regionName} - 客户明细 (共${customers.length}位)`, customers,
-                        regionName);
-                    });
-                } else {
-                    div.addEventListener('click', function() {
-                        const label = this.querySelector('.m-label')?.textContent || '';
-                        const value = this.querySelector('.m-value')?.textContent || '';
-                        showToast(`📊 ${label}: ${value}`);
-                    });
-                }
-                fragment.appendChild(div);
-            });
-            regionMetricsList.innerHTML = '';
-            regionMetricsList.appendChild(fragment);
+            updateBadgeDot();
         }
 
-        // ---- 服务商 ----
-        function renderServiceSelector() {
-            serviceSelector.innerHTML = '';
-            Object.keys(serviceData).forEach(key => {
-                const tab = document.createElement('span');
-                tab.className = 'selector-tab' + (key === currentServiceKey ? ' active' : '');
-                tab.textContent = serviceData[key].name;
-                tab.dataset.service = key;
-                tab.addEventListener('click', function() {
-                    document.querySelectorAll('#serviceSelector .selector-tab').forEach(t => t.classList.remove(
-                        'active'));
-                    this.classList.add('active');
-                    currentServiceKey = this.dataset.service;
-                    renderServiceMetrics(currentServiceKey);
-                });
-                serviceSelector.appendChild(tab);
-            });
+        function editRecord(id) {
+            const record = dbFindById(id);
+            if (!record) { showToast('记录不存在', 'error'); return; }
+            document.getElementById('editingId').value = id;
+            document.getElementById('btnSave').textContent = '✏️ 更新记录';
+            document.getElementById('btnSave').className = 'btn btn-accent';
+            document.getElementById('btnCancelEdit').style.display = 'inline-flex';
+            populateCalculator(record);
+            document.querySelectorAll('.record-card-item.editing-highlight').forEach(c => c.classList.remove(
+                'editing-highlight'));
+            const card = document.querySelector(`.record-card-item[data-id="${id}"]`);
+            if (card) { card.classList.add('editing-highlight');
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+            showToast('正在编辑记录，修改后请点击"更新记录"', 'info');
         }
 
-        function renderServiceSummary() {
-            const selected = selectedMetrics.service;
-            const firstKey = Object.keys(serviceData)[0];
-            const summary = {};
-            ALL_METRICS.forEach(key => {
-                const val = serviceData[firstKey].metrics[key] || '--';
-                summary[key] = val;
-            });
-            summary['上线服务商总数'] = '342';
-            summary['动销服务商数'] = '58';
-            summary['服务商净增数'] = '+12';
-            summary['打压服务商总数'] = '23';
-            summary['支付服务商开通总数'] = '167';
-            summary['终端门店净增数'] = '+38';
-
-            const fragment = document.createDocumentFragment();
-            ALL_METRICS.forEach(key => {
-                const val = summary[key] || '--';
-                const div = document.createElement('div');
-                div.className = 'metric-item';
-                div.dataset.metric = key;
-                div.style.display = selected.includes(key) ? '' : 'none';
-                div.innerHTML = `<span class="m-label">${key}</span><span class="m-value">${val}</span>`;
-                if (key === '全量注册客户数') {
-                    div.style.cursor = 'pointer';
-                    div.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                        let allCustomers = [];
-                        Object.keys(serviceData).forEach(sk => {
-                            const customers = serviceData[sk].customers || [];
-                            allCustomers = allCustomers.concat(customers.map(c => ({
-                                ...c,
-                                name: c.name + ` (${serviceData[sk].name})`
-                            })));
-                        });
-                        openDetail(`全部服务商 - 客户汇总 (共${allCustomers.length}位)`, allCustomers,
-                            '全部服务商');
-                    });
-                } else {
-                    div.addEventListener('click', function() {
-                        const label = this.querySelector('.m-label')?.textContent || '';
-                        const value = this.querySelector('.m-value')?.textContent || '';
-                        showToast(`📊 整体${label}: ${value}`);
-                    });
-                }
-                fragment.appendChild(div);
-            });
-            serviceSummaryGrid.innerHTML = '';
-            serviceSummaryGrid.appendChild(fragment);
-        }
-
-        function renderServiceMetrics(serviceKey) {
-            const data = serviceData[serviceKey];
-            if (!data) return;
-            const selected = selectedMetrics.service;
-            const metrics = data.metrics || {};
-            const customers = data.customers || [];
-            const serviceName = data.name || '服务商';
-            const fragment = document.createDocumentFragment();
-            ALL_METRICS.forEach(key => {
-                const val = metrics[key] || '--';
-                const div = document.createElement('div');
-                div.className = 'metric-item';
-                div.dataset.metric = key;
-                div.style.display = selected.includes(key) ? '' : 'none';
-                div.innerHTML = `<span class="m-label">${key}</span><span class="m-value">${val}</span>`;
-                if (key === '全量注册客户数' && customers.length > 0) {
-                    div.style.cursor = 'pointer';
-                    div.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                        openDetail(`${serviceName} - 客户明细 (共${customers.length}位)`, customers,
-                            serviceName);
-                    });
-                } else {
-                    div.addEventListener('click', function() {
-                        const label = this.querySelector('.m-label')?.textContent || '';
-                        const value = this.querySelector('.m-value')?.textContent || '';
-                        showToast(`📊 ${label}: ${value}`);
-                    });
-                }
-                fragment.appendChild(div);
-            });
-            serviceMetricsGrid.innerHTML = '';
-            serviceMetricsGrid.appendChild(fragment);
-        }
-
-        // ---- 应用所有板块的指标筛选 ----
-        function applyAllIndicatorFilters() {
-            renderOverview();
-            renderRegion();
-            renderServiceSummary();
-            renderServiceMetrics(currentServiceKey);
-        }
-
-        // ================================================================
-        //  筛选浮层交互
-        // ================================================================
-        const filterOverlay = $('filterOverlay');
-        $('filterTrigger').addEventListener('click', () => filterOverlay.classList.add('active'));
-        $('closeFilter').addEventListener('click', () => filterOverlay.classList.remove('active'));
-        filterOverlay.addEventListener('click', function(e) {
-            if (e.target === this) filterOverlay.classList.remove('active');
-        });
-
-        document.querySelectorAll('.filter-options').forEach(group => {
-            group.addEventListener('click', function(e) {
-                const tag = e.target.closest('.tag');
-                if (tag) tag.classList.toggle('active');
-            });
-        });
-
-        $('applyFilter').addEventListener('click', function() {
-            const identity = Array.from(document.querySelectorAll('#filterIdentity .tag.active')).map(el => el
-            .textContent);
-            const status = Array.from(document.querySelectorAll('#filterStatus .tag.active')).map(el => el
-            .textContent);
-            const order = Array.from(document.querySelectorAll('#filterOrder .tag.active')).map(el => el
-            .textContent);
-            const dateInputs = document.querySelectorAll('.date-range input');
-            const start = dateInputs[0].value;
-            const end = dateInputs[1].value;
-            filterState.identity = identity;
-            filterState.status = status;
-            filterState.order = order;
-            filterState.timeRange = { start, end };
-            showToast(`✅ 筛选已应用 (身份:${identity.join(',')} 状态:${status.join(',')})`);
-            filterOverlay.classList.remove('active');
-        });
-
-        // ================================================================
-        //  指标筛选浮层
-        // ================================================================
-        const indicatorOverlay = $('indicatorFilterOverlay');
-        let currentBlock = null;
-
-        function openIndicatorFilter(block) {
-            currentBlock = block;
-            const list = $('indicatorList');
-            const metrics = block === 'overview' ? OVERVIEW_METRICS : ALL_METRICS;
-            const selected = selectedMetrics[block] || [];
-            list.innerHTML = '';
-            metrics.forEach(key => {
-                const div = document.createElement('div');
-                div.className = 'indicator-item';
-                const checked = selected.includes(key) ? 'checked' : '';
-                div.innerHTML =
-                    `<input type="checkbox" id="ind_${key}" value="${key}" ${checked}><label for="ind_${key}">${key}</label>`;
-                list.appendChild(div);
-            });
-            indicatorOverlay.classList.add('active');
-        }
-
-        function closeIndicatorFilter() {
-            indicatorOverlay.classList.remove('active');
-            currentBlock = null;
-        }
-
-        function applyIndicatorFilter() {
-            if (!currentBlock) return;
-            const checkboxes = document.querySelectorAll('#indicatorList input[type="checkbox"]:checked');
-            const selected = Array.from(checkboxes).map(cb => cb.value);
-            selectedMetrics[currentBlock] = selected;
-            if (currentBlock === 'overview') renderOverview();
-            else if (currentBlock === 'region') {
-                renderRegion();
-            } else if (currentBlock === 'service') {
-                renderServiceSummary();
-                renderServiceMetrics(currentServiceKey);
-            }
-            closeIndicatorFilter();
-            showToast(`✅ 已更新 ${currentBlock === 'overview' ? '总览' : currentBlock === 'region' ? '区域' : '服务商'} 指标显示`);
-        }
-
-        document.querySelectorAll('.indicator-filter-btn').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                const block = this.dataset.block;
-                if (block) openIndicatorFilter(block);
-            });
-        });
-        $('closeIndicatorFilter').addEventListener('click', closeIndicatorFilter);
-        $('indicatorCancel').addEventListener('click', closeIndicatorFilter);
-        $('indicatorApply').addEventListener('click', applyIndicatorFilter);
-        indicatorOverlay.addEventListener('click', function(e) {
-            if (e.target === this) closeIndicatorFilter();
-        });
-
-        // ================================================================
-        //  页面切换
-        // ================================================================
-        const tabItems = document.querySelectorAll('.tab-item');
-        const pages = {
-            overview: $('pageOverview'),
-            region: $('pageRegion'),
-            service: $('pageService')
-        };
-
-        function switchTab(tabId) {
-            Object.values(pages).forEach(p => p.classList.remove('active'));
-            if (pages[tabId]) pages[tabId].classList.add('active');
-            tabItems.forEach(item => {
-                item.classList.toggle('active', item.dataset.tab === tabId);
-            });
-            if (tabId === 'region') renderRegion();
-            if (tabId === 'service') {
-                renderServiceSummary();
-                renderServiceMetrics(currentServiceKey);
+        function deleteRecord(id) {
+            const record = dbFindById(id);
+            const identifier = record ? (record.name || record.code || '无名称') : '该记录';
+            if (confirm(`确定要删除「${identifier}」吗？\n\n此操作不可恢复。`)) {
+                if (dbDelete(id)) {
+                    if (document.getElementById('editingId')?.value === id) resetCalculator();
+                    showToast('🗑️ 记录已删除', 'info');
+                    refreshAll();
+                    updateBadgeDot();
+                } else showToast('删除失败', 'error');
             }
         }
 
-        tabItems.forEach(item => {
-            item.addEventListener('click', function() {
-                const tab = this.dataset.tab;
-                if (tab) switchTab(tab);
-            });
-        });
-
-        // ================================================================
-        //  总览按钮事件
-        // ================================================================
-        $('exportBtn').addEventListener('click', () => {
-            showToast('📁 正在生成客户明细 Excel ...', 1200);
-            setTimeout(() => showToast('✅ 导出成功！'), 1200);
-        });
-        $('viewAllBtn').addEventListener('click', () => {
-            const allCustomers = [];
-            function collectCustomers(node) {
-                if (node.customers) allCustomers.push(...node.customers);
-                if (node.children) node.children.forEach(collectCustomers);
-            }
-            collectCustomers(regionTree);
-            openDetail(`全部客户明细 (共${allCustomers.length}位)`, allCustomers, '全部区域');
-        });
-
-        // ================================================================
-        //  初始化 ECharts
-        // ================================================================
-        function initCharts() {
-            const trendChart = echarts.init($('trendChart'));
-            trendChart.setOption({
-                grid: { left: '4%', right: '4%', top: 16, bottom: 16, containLabel: true },
-                xAxis: { type: 'category', data: ['6/8', '6/9', '6/10', '6/11', '6/12', '6/13', '6/14', '6/15', '6/16',
-                            '6/17'
-                    ],
-                    axisLabel: { fontSize: 10, color: '#8c9ab0' },
-                    axisLine: { show: false },
-                    axisTick: { show: false }
-                },
-                yAxis: { type: 'value', splitLine: { lineStyle: { color: '#eef0f4', type: 'dashed' } },
-                    axisLabel: { fontSize: 10, color: '#8c9ab0' }, name: '订单数',
-                    nameTextStyle: { fontSize: 10, color: '#8c9ab0' }
-                },
-                series: [{ data: [62, 58, 71, 85, 78, 92, 105, 88, 94, 102], type: 'line', smooth: true,
-                    lineStyle: { color: '#1677ff', width: 2 },
-                    areaStyle: { color: 'rgba(22,119,255,0.06)' },
-                    symbol: 'circle', symbolSize: 6, itemStyle: { color: '#1677ff' }
-                }],
-                tooltip: { trigger: 'axis', formatter: params =>
-                        `${params[0].axisValue}<br/>订单数: ${params[0].value}` }
-            });
-            const pieChart = echarts.init($('pieChart'));
-            pieChart.setOption({
-                tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
-                legend: { orient: 'vertical', right: 10, top: 'center', itemWidth: 10, itemHeight: 10,
-                    textStyle: { fontSize: 11, color: '#3a4a5e' }
-                },
-                series: [{ type: 'pie', radius: ['50%', '70%'], avoidLabelOverlap: false, label: { show: false },
-                    data: [{ value: 1840000, name: '自营商品', itemStyle: { color: '#1677ff' } },
-                    { value: 460000, name: '联营商品', itemStyle: { color: '#ffa940' } }],
-                    itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 2 }
-                }]
-            });
-            window.addEventListener('resize', () => { trendChart.resize();
-                pieChart.resize(); });
+        function refreshAll() {
+            renderRecordsList();
+            if (currentTab === 'overview') refreshOverview();
+            updateBadgeDot();
         }
 
-        // ================================================================
-        //  启动
-        // ================================================================
+        function refreshRecords() {
+            renderRecordsList();
+            updateBadgeDot();
+        }
+
+        function updateBadgeDot() {
+            const dot = document.getElementById('recordBadgeDot');
+            if (dot) {
+                const count = getDB().length;
+                dot.style.display = count > 0 ? 'block' : 'none';
+            }
+        }
+
+        // ==================== 记录列表渲染 ====================
+        function renderRecordsList() {
+            const kw = document.getElementById('searchInput')?.value || '';
+            const records = dbSearch(kw);
+            const grid = document.getElementById('recordsGrid');
+            const label = document.getElementById('recordCountLabel');
+            if (label) label.textContent = `共 ${records.length} 条记录` + (kw ? '（已筛选）' : '');
+            if (!grid) return;
+            if (records.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state" style="grid-column:1/-1;">
+                        <div class="empty-icon">📭</div>
+                        <p>${kw ? '没有匹配的记录' : '暂无保存的记录'}</p>
+                        <p style="font-size:0.75rem;color:#cbd5e1;">${kw ? '尝试其他关键词' : '在计算器中完成计算后保存'}</p>
+                    </div>`;
+                return;
+            }
+            grid.innerHTML = records.map(r => {
+                const title = r.name || r.code || '未命名基金';
+                const subCode = r.code ? (r.name ? r.code : '') : '';
+                const origCount = r.originalEntries?.length || 0;
+                const hasNew = r.newEntry && r.newEntry.amount > 0 && r.newEntry.price > 0;
+                const timeStr = r.updatedAt ? new Date(r.updatedAt).toLocaleString('zh-CN', { month: 'short',
+                    day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+                return `
+                <div class="record-card-item" data-id="${r.id}">
+                    <div class="rc-header">
+                        <div>
+                            <div class="rc-title">${escHtml(title)}</div>
+                            ${subCode ? `<span class="rc-code">${escHtml(subCode)}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="rc-meta">
+                        <span>📋 原有<span class="meta-val">${origCount}笔</span></span>
+                        ${hasNew ? '<span>🎯 含预期</span>' : '<span style="color:#94a3b8">无预期</span>'}
+                        <span>💰 <span class="meta-val">¥${r.totalAmount.toFixed(2)}</span></span>
+                        <span>⭐ <span class="meta-val">¥${r.finalPrice.toFixed(4)}</span></span>
+                    </div>
+                    <div class="rc-time">🕒 ${timeStr || '未知'}</div>
+                    <div class="rc-actions">
+                        <button class="btn btn-outline btn-xs" onclick="editRecord('${r.id}')">✏️ 编辑</button>
+                        <button class="btn btn-danger btn-xs" onclick="deleteRecord('${r.id}')">🗑️ 删除</button>
+                    </div>
+                </div>`;
+            }).join('');
+            updateBadgeDot();
+        }
+
+        function escHtml(str) {
+            const d = document.createElement('div');
+            d.textContent = str;
+            return d.innerHTML;
+        }
+
+        // ==================== 概览页 ====================
+        function refreshOverview() {
+            const records = getDB();
+            document.getElementById('statTotalRecords').textContent = records.length;
+            const totalAmt = records.reduce((s, r) => s + (r.totalAmount || 0), 0);
+            document.getElementById('statTotalAmount').textContent = '¥' + totalAmt.toFixed(0);
+            const prices = records.map(r => r.finalPrice).filter(p => p > 0);
+            const avgP = prices.length > 0 ? prices.reduce((s, p) => s + p, 0) / prices.length : 0;
+            document.getElementById('statAvgPrice').textContent = prices.length > 0 ? '¥' + avgP.toFixed(4) : '—';
+            const uniqueCodes = new Set(records.map(r => r.code).filter(Boolean));
+            document.getElementById('statUniqueFunds').textContent = uniqueCodes.size;
+
+            // 柱状图
+            const chartContainer = document.getElementById('barChartContainer');
+            if (!chartContainer) return;
+            const recent = records.slice(0, 8).reverse();
+            if (recent.length === 0) {
+                chartContainer.innerHTML =
+                '<div class="empty-state" style="width:100%;"><p style="color:#cbd5e1;">暂无数据可展示</p></div>';
+                return;
+            }
+            const maxPrice = Math.max(...recent.map(r => r.finalPrice || 0), 0.01);
+            chartContainer.innerHTML = recent.map((r, i) => {
+                const h = maxPrice > 0 ? Math.max((r.finalPrice / maxPrice) * 160, 8) : 8;
+                const label = (r.name || r.code || '?').slice(0, 6);
+                return `
+                <div class="bar-col">
+                    <div class="bar-value">¥${r.finalPrice.toFixed(3)}</div>
+                    <div class="bar${i % 2 === 0 ? '' : ' accent-bar'}" style="height:${h}px;"
+                        title="${escHtml(r.name || r.code || '')}: ¥${r.finalPrice.toFixed(4)}"></div>
+                    <div class="bar-label">${escHtml(label)}</div>
+                </div>`;
+            }).join('');
+        }
+
+        // ==================== 导出导入 ====================
+        function exportAllRecords() {
+            const records = getDB();
+            if (records.length === 0) { showToast('没有可导出的记录', 'warning'); return; }
+            const json = dbExport();
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `基金记录备份_${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast(`📥 已导出 ${records.length} 条记录`, 'success');
+        }
+
+        function handleDragOver(e) { e.preventDefault();
+            e.stopPropagation();
+            e.currentTarget.style.borderColor = '#4f46e5';
+            e.currentTarget.style.background = '#eef2ff'; }
+
+        function handleDragLeave(e) { e.preventDefault();
+            e.stopPropagation();
+            e.currentTarget.style.borderColor = '#cbd5e1';
+            e.currentTarget.style.background = '#fafbfc'; }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.currentTarget.style.borderColor = '#cbd5e1';
+            e.currentTarget.style.background = '#fafbfc';
+            const files = e.dataTransfer.files;
+            if (files.length > 0) processImportFile(files[0]);
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) processImportFile(file);
+            e.target.value = '';
+        }
+
+        function processImportFile(file) {
+            if (!file.name.endsWith('.json')) { showToast('请选择 .json 备份文件', 'error'); return; }
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                try {
+                    const count = dbImport(ev.target.result);
+                    showToast(`✅ 成功导入 ${count} 条记录`, 'success');
+                    refreshAll();
+                } catch (err) { showToast('导入失败：' + err.message, 'error'); }
+            };
+            reader.readAsText(file);
+        }
+
+        function clearAllData() {
+            if (confirm('确定要清空所有本地保存的基金记录吗？\n\n此操作不可恢复！建议先导出备份。')) {
+                saveDB([]);
+                resetCalculator();
+                refreshAll();
+                showToast('🗑️ 所有记录已清空', 'warning');
+            }
+        }
+
+        // ==================== 初始化 ====================
         function init() {
-            renderOverview();
-            renderRecentClients();
-            renderServiceSelector();
-            renderCategoryNav();
-            currentRegionNode = regionTree.children[0];
-            // 默认显示全部指标
-            selectedMetrics.region = [...CATEGORY_MAP['全部']];
-            renderRegion();
-            renderServiceSummary();
-            renderServiceMetrics(currentServiceKey);
-            initCharts();
-            applyAllIndicatorFilters();
-            console.log('📊 看板初始化完成');
+            renderEntryRows(2);
+            autoCalc();
+            renderRecordsList();
+            updateBadgeDot();
+
+            // 恢复上次tab
+            try {
+                const savedTab = sessionStorage.getItem('fund_calc_active_tab');
+                if (savedTab && ['calculator', 'records', 'overview', 'tools'].includes(savedTab)) {
+                    switchTab(savedTab);
+                }
+            } catch (e) {}
+
+            // 全局暴露
+            window.switchTab = switchTab;
+            window.addEntryRow = addEntryRow;
+            window.removeEntryRow = removeEntryRow;
+            window.autoCalc = autoCalc;
+            window.saveRecord = saveRecord;
+            window.editRecord = editRecord;
+            window.deleteRecord = deleteRecord;
+            window.resetCalculator = resetCalculator;
+            window.cancelEdit = cancelEdit;
+            window.renderRecordsList = renderRecordsList;
+            window.refreshRecords = refreshRecords;
+            window.exportAllRecords = exportAllRecords;
+            window.handleDrop = handleDrop;
+            window.handleDragOver = handleDragOver;
+            window.handleDragLeave = handleDragLeave;
+            window.handleFileSelect = handleFileSelect;
+            window.clearAllData = clearAllData;
+            window.refreshOverview = refreshOverview;
+            window.refreshAll = refreshAll;
+
+            // 快捷键
+            document.addEventListener('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault();
+                    saveRecord(); }
+                if ((e.ctrlKey || e.metaKey) && e.key === 'n') { e.preventDefault();
+                    resetCalculator();
+                    switchTab('calculator'); }
+                if ((e.ctrlKey || e.metaKey) && e.key === '1') { e.preventDefault();
+                    switchTab('calculator'); }
+                if ((e.ctrlKey || e.metaKey) && e.key === '2') { e.preventDefault();
+                    switchTab('records'); }
+                if ((e.ctrlKey || e.metaKey) && e.key === '3') { e.preventDefault();
+                    switchTab('overview'); }
+                if ((e.ctrlKey || e.metaKey) && e.key === '4') { e.preventDefault();
+                    switchTab('tools'); }
+            });
+
+            console.log('📊 基金持仓成本计算器已就绪');
+            console.log('🧭 顶部导航栏切换：计算器 | 持仓记录 | 数据概览 | 工具');
+            console.log('⌨️ 快捷键: Ctrl+1~4 切换Tab | Ctrl+S 保存 | Ctrl+N 新建');
+            console.log('💾 数据存储在 localStorage:', STORAGE_KEY);
+            console.log('📥 支持拖拽.json文件到工具页进行导入');
         }
 
-        init();
-    </script>
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    })();
+</script>
 </body>
 </html>
