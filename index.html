@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>基金持仓成本计算器 · 增强版</title>
+    <title>基金持仓成本计算器</title>
     <style>
         :root {
             --bg: #f1f5f9;
@@ -168,19 +168,28 @@
         .card-body { padding:14px 18px; }
         .card-body.compact { padding:10px 14px; }
 
-        .fund-info-bar {
-            display:flex; gap:8px; align-items:center; flex-wrap:wrap;
-            background:#f8fafc; border:1.5px solid var(--border);
-            border-radius:var(--radius); padding:10px 14px; margin-bottom:14px;
+        .fund-info-vertical {
+            display:flex;
+            flex-direction:column;
+            gap:8px;
+            margin-bottom:14px;
         }
-        .fund-info-bar .fi-label { font-size:0.76rem; font-weight:600; color:var(--text-secondary); }
-        .fund-info-bar input {
-            flex:1; min-width:90px; padding:8px 12px;
-            border:1.8px solid var(--border); border-radius:18px;
-            font-size:0.85rem; background:#fff; outline:none;
+        .fund-info-vertical input {
+            padding:8px 12px;
+            border:1.8px solid var(--border);
+            border-radius:18px;
+            font-size:0.85rem;
+            background:#fff;
+            outline:none;
         }
-        .fund-info-bar input:focus { border-color:#a5b4fc; box-shadow:0 0 0 3px rgba(79,70,229,0.06); }
-
+        .fund-info-vertical input:focus { border-color:#a5b4fc; box-shadow:0 0 0 3px rgba(79,70,229,0.06); }
+        .fund-info-vertical .fi-label {
+            font-size:0.76rem;
+            font-weight:600;
+            color:var(--text-secondary);
+            margin-bottom:2px;
+            display:block;
+        }
         .section-label {
             font-size:0.75rem; font-weight:600; text-transform:uppercase;
             letter-spacing:0.5px; color:var(--text-secondary);
@@ -194,9 +203,16 @@
             display:flex; gap:6px; align-items:center; margin-bottom:6px;
             background:#fafbfc; padding:8px 12px; border-radius:var(--radius);
             border:1.5px solid transparent; transition:var(--transition-fast);
+            flex-wrap:wrap;
         }
         .entry-row:hover { border-color:#e0e7ef; }
         .entry-row .row-num { font-weight:700; color:#cbd5e1; min-width:20px; text-align:center; }
+        .entry-row .field-group {
+            display:flex; align-items:center; gap:4px; flex:1; min-width:200px;
+        }
+        .entry-row .field-group label {
+            font-size:0.78rem; font-weight:500; white-space:nowrap; color:var(--text-secondary);
+        }
         .entry-row input {
             flex:1; min-width:70px; padding:8px 10px;
             border:1.8px solid var(--border); border-radius:var(--radius-sm);
@@ -269,16 +285,22 @@
         .record-card-item .rc-meta .meta-val { font-weight:600; color:var(--text); font-family:var(--font-mono); }
         .record-card-item .rc-actions { display:flex; gap:4px; margin-top:6px; }
 
+        .daily-vertical {
+            display:flex; flex-direction:column; gap:8px; margin-bottom:14px;
+        }
+        .daily-vertical input { padding:8px 12px; border:1.8px solid var(--border); border-radius:18px; font-size:0.85rem; }
+        .daily-vertical input:focus { border-color:#a5b4fc; box-shadow:0 0 0 3px rgba(79,70,229,0.06); }
         .daily-list { display:flex; flex-direction:column; gap:6px; max-height:300px; overflow-y:auto; }
         .daily-item { display:flex; align-items:center; justify-content:space-between; background:#fafbfc; padding:8px 12px; border-radius:var(--radius-sm); border:1px solid var(--border); font-size:0.82rem; }
-        .daily-item .daily-code { font-weight:600; }
-        .daily-item .daily-price { font-family:var(--font-mono); color:var(--primary); }
 
-        .pie-chart-container { display:flex; flex-wrap:wrap; gap:20px; align-items:center; justify-content:center; }
-        .pie-chart { width:180px; height:180px; border-radius:50%; background: conic-gradient(#ccc 0deg 360deg); box-shadow:var(--shadow-md); }
-        .pie-legend { display:flex; flex-direction:column; gap:6px; max-height:200px; overflow-y:auto; }
-        .pie-legend-item { display:flex; align-items:center; gap:8px; font-size:0.78rem; }
-        .legend-color { width:12px; height:12px; border-radius:4px; flex-shrink:0; }
+        .overview-stats { display:flex; gap:20px; flex-wrap:wrap; margin-bottom:16px; background:#fff; padding:14px 18px; border-radius:var(--radius-lg); border:1px solid var(--border); }
+        .overview-stat { text-align:center; }
+        .overview-stat .stat-value { font-size:1.4rem; font-weight:700; font-family:var(--font-mono); }
+        .overview-stat .stat-label { font-size:0.7rem; color:var(--text-muted); }
+        .list-table { width:100%; border-collapse:collapse; font-size:0.82rem; }
+        .list-table th, .list-table td { padding:8px 10px; border-bottom:1px solid var(--border-light); text-align:left; }
+        .list-table th { font-weight:600; color:var(--text-secondary); font-size:0.72rem; text-transform:uppercase; }
+        .list-table td { font-family:var(--font-mono); }
 
         .toast-container { position:fixed; top:16px; right:16px; z-index:9999; }
         .toast { padding:10px 16px; border-radius:20px; color:#fff; box-shadow:var(--shadow-xl); margin-bottom:8px; }
@@ -288,25 +310,20 @@
             .navbar { height:auto; min-height:56px; }
             .navbar-inner { flex-wrap:wrap; padding:6px 8px; gap:4px; }
             .nav-brand { font-size:0.9rem; }
-            .nav-brand .brand-icon { width:30px; height:30px; font-size:0.95rem; }
             .nav-tabs { flex-basis:100%; order:3; margin-top:4px; overflow-x:visible; flex-wrap:wrap; justify-content:center; gap:4px; background:transparent; padding:0; }
-            .nav-tab { flex:1 1 calc(33.33% - 8px); justify-content:center; padding:7px 2px; font-size:0.7rem; background:#f1f5f9; border-radius:14px; white-space:normal; }
+            .nav-tab { flex:1 1 calc(33.33% - 8px); justify-content:center; padding:7px 2px; font-size:0.7rem; background:#f1f5f9; border-radius:14px; }
             .nav-tab.active { background:#fff; }
             .main-content { padding:10px 8px 30px; }
-            .entry-row { flex-direction:column; gap:4px; padding:8px; }
-            .entry-row input, .entry-row .shares-cell { width:100%; }
+            .entry-row { flex-direction:column; align-items:stretch; }
+            .entry-row .field-group { flex-direction:row; }
             .records-grid { grid-template-columns:1fr; }
-            .pie-chart-container { flex-direction:column; align-items:center; }
         }
     </style>
 </head>
 <body>
     <nav class="navbar">
         <div class="navbar-inner">
-            <div class="nav-brand">
-                <div class="brand-icon">📊</div>
-                <span>基金持仓计算器</span>
-            </div>
+            <div class="nav-brand"><div class="brand-icon">📊</div><span>基金持仓计算器</span></div>
             <div class="nav-tabs">
                 <button class="nav-tab active" data-tab="calculator" onclick="switchTab('calculator')"><span class="tab-icon">🧮</span> 计算器</button>
                 <button class="nav-tab" data-tab="input" onclick="switchTab('input')"><span class="tab-icon">✍️</span> 录入</button>
@@ -316,10 +333,7 @@
                 <button class="nav-tab" data-tab="tools" onclick="switchTab('tools')"><span class="tab-icon">⚙️</span> 工具</button>
             </div>
             <div class="nav-actions">
-                <button class="btn-icon" onclick="switchTab('records')" title="查看记录">
-                    📁
-                    <span class="badge-dot" id="recordBadgeDot" style="display:none;"></span>
-                </button>
+                <button class="btn-icon" onclick="switchTab('records')" title="查看记录">📁<span class="badge-dot" id="recordBadgeDot" style="display:none;"></span></button>
             </div>
         </div>
     </nav>
@@ -332,18 +346,19 @@
             <div class="card">
                 <div class="card-header"><h2>🧮 持仓成本计算</h2><button class="btn btn-ghost btn-sm" onclick="resetCalculator()">🔄 清空</button></div>
                 <div class="card-body">
-                    <div class="fund-info-bar">
-                        <span class="fi-label">🏷️ 代码</span><input type="text" id="fundCodeCalc" placeholder="例如：000001" maxlength="20" style="max-width:140px;">
-                        <span class="fi-label">📛 名称</span><input type="text" id="fundNameCalc" placeholder="例如：华夏成长混合" maxlength="50">
+                    <div class="fund-info-vertical">
+                        <div><span class="fi-label">🏷️ 基金代码</span><input type="text" id="fundCodeCalc" placeholder="例如：000001" maxlength="20"></div>
+                        <div><span class="fi-label">📛 基金名称</span><input type="text" id="fundNameCalc" placeholder="例如：华夏成长混合" maxlength="50"></div>
+                        <div><span class="fi-label">📊 所属板块</span><input type="text" id="fundSectorCalc" placeholder="如：科技、消费、医疗" maxlength="30"></div>
                     </div>
                     <div class="section-label">📋 原有持仓 <span class="count-badge" id="entryCountCalc">2笔</span></div>
                     <div id="originalEntriesContainer"></div>
                     <button class="btn btn-outline btn-sm" onclick="addEntryRow()">➕ 添加一笔</button>
                     <div class="section-label">🎯 预期购入</div>
                     <div class="entry-row highlight-new">
-                        <span class="row-num">🆕</span>
-                        <input type="number" id="newAmountCalc" placeholder="金额（元）" step="0.01" oninput="autoCalc()">
-                        <input type="number" id="newPriceCalc" placeholder="单价（元）" step="0.0001" oninput="autoCalc()">
+                        <span class="row-num"></span>
+                        <div class="field-group"><label>金额:</label><input type="number" id="newAmountCalc" placeholder="元" step="0.01" oninput="autoCalc()"></div>
+                        <div class="field-group"><label>单价:</label><input type="number" id="newPriceCalc" placeholder="元" step="0.0001" oninput="autoCalc()"></div>
                         <span class="shares-cell placeholder" id="newSharesCalc">— 份</span>
                     </div>
                     <div class="result-grid">
@@ -367,9 +382,10 @@
             <div class="card">
                 <div class="card-header"><h2>✍️ 录入基金持仓</h2><button class="btn btn-ghost btn-sm" onclick="resetInputForm()">🔄 清空</button></div>
                 <div class="card-body">
-                    <div class="fund-info-bar">
-                        <span class="fi-label">🏷️ 代码</span><input type="text" id="fundCodeInput" placeholder="例如：000001" maxlength="20" style="max-width:140px;">
-                        <span class="fi-label">📛 名称</span><input type="text" id="fundNameInput" placeholder="例如：华夏成长混合" maxlength="50">
+                    <div class="fund-info-vertical">
+                        <div><span class="fi-label">🏷️ 基金代码</span><input type="text" id="fundCodeInput" placeholder="例如：000001" maxlength="20"></div>
+                        <div><span class="fi-label">📛 基金名称</span><input type="text" id="fundNameInput" placeholder="例如：华夏成长混合" maxlength="50"></div>
+                        <div><span class="fi-label">📊 所属板块</span><input type="text" id="fundSectorInput" placeholder="如：科技、消费、医疗" maxlength="30"></div>
                     </div>
                     <div class="section-label">📋 持仓明细 <span class="count-badge" id="entryCountInput">1笔</span></div>
                     <div id="inputEntriesContainer"></div>
@@ -389,14 +405,11 @@
             <div class="card">
                 <div class="card-header"><h2>📆 更新每日单价</h2></div>
                 <div class="card-body">
-                    <div class="fund-info-bar">
-                        <span class="fi-label">🏷️ 基金代码</span>
-                        <input type="text" id="dailyCode" placeholder="例如：000001" maxlength="20" style="max-width:160px;">
-                        <span class="fi-label">💵 当日单价</span>
-                        <input type="number" id="dailyPrice" placeholder="单位净值" step="0.0001" min="0" style="max-width:150px;">
-                        <span class="fi-label">📅 日期</span>
-                        <input type="date" id="dailyDate" style="max-width:140px;">
-                        <button class="btn btn-primary btn-sm" onclick="addDailyPrice()">➕ 添加</button>
+                    <div class="daily-vertical">
+                        <div><span class="fi-label">🏷️ 基金代码</span><input type="text" id="dailyCode" placeholder="例如：000001" maxlength="20"></div>
+                        <div><span class="fi-label">💵 当日单价</span><input type="number" id="dailyPrice" placeholder="单位净值" step="0.0001" min="0"></div>
+                        <div><span class="fi-label">📅 日期</span><input type="date" id="dailyDate"></div>
+                        <button class="btn btn-primary btn-sm" onclick="addDailyPrice()">➕ 添加单价</button>
                     </div>
                     <div class="section-label">📋 最近录入的单价</div>
                     <div class="daily-list" id="dailyListContainer"></div>
@@ -408,32 +421,34 @@
         <div class="tab-panel" id="panel-records">
             <div class="card">
                 <div class="card-header"><h2>📋 已保存的记录</h2>
-                    <div>
-                        <button class="btn btn-outline btn-sm" onclick="exportAllRecords()">📥 导出</button>
-                        <button class="btn btn-ghost btn-sm" onclick="refreshRecords()">🔄 刷新</button>
-                    </div>
+                    <div><button class="btn btn-outline btn-sm" onclick="exportAllRecords()">📥 导出</button><button class="btn btn-ghost btn-sm" onclick="refreshRecords()">🔄 刷新</button></div>
                 </div>
                 <div class="records-toolbar">
-                    <div class="search-input-wrap">
-                        <span class="search-icon">🔍</span>
-                        <input type="text" id="searchInput" placeholder="搜索代码或名称..." oninput="renderRecordsList()">
-                    </div>
+                    <div class="search-input-wrap"><span class="search-icon">🔍</span><input type="text" id="searchInput" placeholder="搜索代码或名称..." oninput="renderRecordsList()"></div>
                     <span id="recordCountLabel" style="font-size:0.75rem;color:var(--text-muted);">共 0 条</span>
                 </div>
                 <div class="records-grid" id="recordsGrid"></div>
             </div>
         </div>
 
-        <!-- 概览面板 -->
+        <!-- 概览面板 (改为列表占比) -->
         <div class="tab-panel" id="panel-overview">
+            <div class="overview-stats" id="overviewStats">
+                <div class="overview-stat"><div class="stat-value" id="statTotalAmount">¥0</div><div class="stat-label">总持仓金额</div></div>
+                <div class="overview-stat"><div class="stat-value" id="statFundCount">0</div><div class="stat-label">基金数量</div></div>
+            </div>
+            <div class="card" style="margin-bottom:16px;">
+                <div class="card-header"><h2>📊 板块持仓占比</h2></div>
+                <div class="card-body compact">
+                    <table class="list-table" id="sectorTable"><thead><tr><th>板块</th><th>金额</th><th>占比</th></tr></thead><tbody></tbody></table>
+                    <div id="sectorEmpty" style="text-align:center;color:var(--text-muted);">暂无数据</div>
+                </div>
+            </div>
             <div class="card">
                 <div class="card-header"><h2>📈 基金持仓占比</h2></div>
-                <div class="card-body">
-                    <div class="pie-chart-container">
-                        <div class="pie-chart" id="pieChart"></div>
-                        <div class="pie-legend" id="pieLegend"></div>
-                    </div>
-                    <div id="overviewEmpty" style="text-align:center;color:var(--text-muted);display:none;">暂无数据</div>
+                <div class="card-body compact">
+                    <table class="list-table" id="fundTable"><thead><tr><th>基金</th><th>金额</th><th>占比</th></tr></thead><tbody></tbody></table>
+                    <div id="fundEmpty" style="text-align:center;color:var(--text-muted);">暂无数据</div>
                 </div>
             </div>
         </div>
@@ -443,12 +458,8 @@
             <div class="card">
                 <div class="card-header"><h2>⚙️ 数据工具</h2></div>
                 <div class="card-body">
-                    <div class="tool-section">
-                        <h3>📥 导出备份</h3><p style="font-size:0.8rem;">导出所有记录为JSON文件。</p>
-                        <button class="btn btn-outline btn-sm" onclick="exportAllRecords()">📥 导出JSON</button>
-                    </div>
-                    <div class="tool-section">
-                        <h3>📤 导入恢复</h3><p style="font-size:0.8rem;">拖拽.json文件到下方区域。</p>
+                    <div class="tool-section"><h3>📥 导出备份</h3><p style="font-size:0.8rem;">导出所有记录为JSON文件。</p><button class="btn btn-outline btn-sm" onclick="exportAllRecords()">📥 导出JSON</button></div>
+                    <div class="tool-section"><h3>📤 导入恢复</h3><p style="font-size:0.8rem;">拖拽.json文件到下方区域。</p>
                         <div id="dropZone" style="border:2px dashed #cbd5e1;border-radius:16px;padding:24px;text-align:center;background:#fafbfc;"
                              ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)"
                              onclick="document.getElementById('fileInput').click()">
@@ -456,10 +467,7 @@
                         </div>
                         <input type="file" id="fileInput" accept=".json" style="display:none;" onchange="handleFileSelect(event)">
                     </div>
-                    <div class="tool-section">
-                        <h3>🗑️ 清空数据</h3><p style="font-size:0.8rem;color:var(--danger);">删除全部本地记录，不可恢复。</p>
-                        <button class="btn btn-danger btn-sm" onclick="clearAllData()">🗑️ 清空全部</button>
-                    </div>
+                    <div class="tool-section"><h3>🗑️ 清空数据</h3><p style="font-size:0.8rem;color:var(--danger);">删除全部本地记录，不可恢复。</p><button class="btn btn-danger btn-sm" onclick="clearAllData()">🗑️ 清空全部</button></div>
                 </div>
             </div>
         </div>
@@ -467,8 +475,8 @@
 
     <script>
         (function() {
-            // ---------- 基金记录数据库 ----------
-            const STORAGE_KEY = 'fund_calc_records_v6';
+            const STORAGE_KEY = 'fund_calc_records_v7';
+            const DAILY_STORAGE_KEY = 'fund_daily_prices_v1';
             function getDB() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch(e) { return []; } }
             function saveDB(records) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); } catch(e) { if(e.name==='QuotaExceededError') showToast('存储空间不足','error'); } }
             function genId() { return Date.now().toString(36)+'-'+Math.random().toString(36).substr(2,9); }
@@ -480,49 +488,14 @@
             function dbSearch(kw) { if(!kw) return dbFindAll(); const k=kw.toLowerCase(); return getDB().filter(r=>(r.code&&r.code.toLowerCase().includes(k))||(r.name&&r.name.toLowerCase().includes(k))).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)); }
             function dbExport() { return JSON.stringify(getDB(),null,2); }
             function dbImport(jsonStr) { const data=JSON.parse(jsonStr); if(!Array.isArray(data)) throw new Error('格式错误'); const existing=getDB(); const ids=new Set(existing.map(r=>r.id)); let cnt=0; data.forEach(item=>{ if(!item.id||!ids.has(item.id)) { if(!item.id) item.id=genId(); if(!item.createdAt) item.createdAt=new Date().toISOString(); if(!item.updatedAt) item.updatedAt=item.createdAt; existing.unshift(item); ids.add(item.id); cnt++; } }); saveDB(existing); return cnt; }
-
-            // ---------- 每日单价数据库 ----------
-            const DAILY_STORAGE_KEY = 'fund_daily_prices_v1';
             function getDailyDB() { try { const raw = localStorage.getItem(DAILY_STORAGE_KEY); return raw ? JSON.parse(raw) : {}; } catch(e) { return {}; } }
             function saveDailyDB(data) { try { localStorage.setItem(DAILY_STORAGE_KEY, JSON.stringify(data)); } catch(e) { showToast('存储空间不足','error'); } }
-            // 添加每日价格：code -> 数组 [{date, price}]
-            function addDailyPriceToDB(code, price, dateStr) {
-                const db = getDailyDB();
-                if (!db[code]) db[code] = [];
-                // 如果同一天已有记录，则更新
-                const existing = db[code].findIndex(item => item.date === dateStr);
-                if (existing >= 0) {
-                    db[code][existing].price = price;
-                } else {
-                    db[code].push({ date: dateStr, price });
-                }
-                // 按日期降序排序
-                db[code].sort((a,b) => b.date.localeCompare(a.date));
-                saveDailyDB(db);
-            }
-            function deleteDailyPrice(code, dateStr) {
-                const db = getDailyDB();
-                if (!db[code]) return false;
-                db[code] = db[code].filter(item => item.date !== dateStr);
-                if (db[code].length === 0) delete db[code];
-                saveDailyDB(db);
-                return true;
-            }
-            function getLatestDailyPrice(code) {
-                const db = getDailyDB();
-                const arr = db[code];
-                if (arr && arr.length > 0) return arr[0]; // 已排序，第一个即最新
-                return null;
-            }
-            function getAllDailyPrices(code) {
-                const db = getDailyDB();
-                return db[code] || [];
-            }
+            function addDailyPriceToDB(code, price, dateStr) { const db = getDailyDB(); if (!db[code]) db[code] = []; const existing = db[code].findIndex(item => item.date === dateStr); if (existing >= 0) db[code][existing].price = price; else db[code].push({ date: dateStr, price }); db[code].sort((a,b) => b.date.localeCompare(a.date)); saveDailyDB(db); }
+            function deleteDailyPrice(code, dateStr) { const db = getDailyDB(); if (!db[code]) return false; db[code] = db[code].filter(item => item.date !== dateStr); if (db[code].length === 0) delete db[code]; saveDailyDB(db); return true; }
+            function getLatestDailyPrice(code) { const db = getDailyDB(); const arr = db[code]; return (arr && arr.length > 0) ? arr[0] : null; }
 
-            // ---------- Toast ----------
             function showToast(msg,type='info') { const c=document.getElementById('toastContainer'); const t=document.createElement('div'); t.className=`toast ${type}`; t.textContent=msg; c.appendChild(t); setTimeout(()=>t.remove(),2500); }
 
-            // ---------- 导航切换 ----------
             let currentTab='calculator';
             function switchTab(tab) {
                 currentTab=tab;
@@ -536,21 +509,21 @@
                 sessionStorage.setItem('fund_calc_tab',tab);
             }
 
-            // ---------- 计算器逻辑 ----------
+            // ---------- 计算器 ----------
             let calcEntryCount=2;
             function createCalcRow(idx) {
                 const row=document.createElement('div'); row.className='entry-row'; row.setAttribute('data-index',idx);
                 row.innerHTML=`<span class="row-num">${idx+1}</span>
-                    <input type="number" class="input-amount" placeholder="金额" step="0.01" oninput="autoCalc()" data-type="amount" data-index="${idx}">
-                    <input type="number" class="input-price" placeholder="单价" step="0.0001" oninput="autoCalc()" data-type="price" data-index="${idx}">
-                    <span class="shares-cell placeholder" data-type="shares" data-index="${idx}">— 份</span>
+                    <div class="field-group"><label>金额:</label><input type="number" class="input-amount" placeholder="元" step="0.01" oninput="autoCalc()"></div>
+                    <div class="field-group"><label>单价:</label><input type="number" class="input-price" placeholder="元" step="0.0001" oninput="autoCalc()"></div>
+                    <span class="shares-cell placeholder">— 份</span>
                     <button class="btn-remove" onclick="removeCalcRow(this,${idx})" ${calcEntryCount<=1?'disabled':''}>✕</button>`;
                 return row;
             }
             function renderCalcRows(count) { const c=document.getElementById('originalEntriesContainer'); c.innerHTML=''; for(let i=0;i<count;i++) c.appendChild(createCalcRow(i)); calcEntryCount=count; updateCalcBadge(); }
-            function addEntryRow() { if(calcEntryCount>=20) { showToast('最多20笔','warning'); return; } const c=document.getElementById('originalEntriesContainer'); c.appendChild(createCalcRow(calcEntryCount)); calcEntryCount++; updateCalcBadge(); }
+            function addEntryRow() { if(calcEntryCount>=20) { showToast('最多20笔','warning'); return; } document.getElementById('originalEntriesContainer').appendChild(createCalcRow(calcEntryCount)); calcEntryCount++; updateCalcBadge(); }
             function removeCalcRow(btn,idx) { if(calcEntryCount<=1) { showToast('至少一笔','warning'); return; } const row=btn.closest('.entry-row'); row.style.opacity='0'; row.style.transform='translateX(-20px)'; setTimeout(()=>{ row.remove(); calcEntryCount--; reindexCalcRows(); updateCalcBadge(); autoCalc(); },200); }
-            function reindexCalcRows() { const rows=document.querySelectorAll('#originalEntriesContainer .entry-row'); rows.forEach((row,i)=>{ row.setAttribute('data-index',i); row.querySelector('.row-num').textContent=i+1; row.querySelectorAll('input').forEach(inp=>inp.setAttribute('data-index',i)); row.querySelector('.shares-cell').setAttribute('data-index',i); row.querySelector('.btn-remove').setAttribute('onclick',`removeCalcRow(this,${i})`); }); calcEntryCount=rows.length; }
+            function reindexCalcRows() { const rows=document.querySelectorAll('#originalEntriesContainer .entry-row'); rows.forEach((row,i)=>{ row.setAttribute('data-index',i); row.querySelector('.row-num').textContent=i+1; row.querySelector('.btn-remove').setAttribute('onclick',`removeCalcRow(this,${i})`); }); calcEntryCount=rows.length; }
             function updateCalcBadge() { document.getElementById('entryCountCalc').textContent=calcEntryCount+'笔'; document.querySelectorAll('#originalEntriesContainer .btn-remove').forEach(b=>b.disabled=calcEntryCount<=1); }
             function getCalcEntries() {
                 const rows=document.querySelectorAll('#originalEntriesContainer .entry-row');
@@ -576,9 +549,7 @@
                 const newAmt=parseFloat(document.getElementById('newAmountCalc').value)||0;
                 const newPrc=parseFloat(document.getElementById('newPriceCalc').value)||0;
                 const newShr=(newPrc>0&&newAmt>0)?newAmt/newPrc:0;
-                const newCell=document.getElementById('newSharesCalc');
-                if(newAmt>0&&newPrc>0){ newCell.textContent=newShr.toFixed(4)+' 份'; newCell.classList.remove('placeholder'); }
-                else { newCell.textContent='— 份'; newCell.classList.add('placeholder'); }
+                document.getElementById('newSharesCalc').textContent=newShr>0?newShr.toFixed(4)+' 份':'— 份';
                 const grandAmt=totalAmt+newAmt, grandShr=totalShr+newShr;
                 document.getElementById('totalOrigAmountCalc').textContent='¥'+totalAmt.toFixed(2);
                 document.getElementById('totalOrigSharesCalc').textContent=totalShr.toFixed(4)+' 份';
@@ -596,22 +567,21 @@
                 return {
                     code:document.getElementById('fundCodeCalc').value.trim(),
                     name:document.getElementById('fundNameCalc').value.trim(),
+                    sector:document.getElementById('fundSectorCalc').value.trim(),
                     originalEntries:entries,
                     newEntry:{amount:newAmt,price:newPrc,shares:newShr},
                     totalAmount:grandAmt, totalShares:grandShr, finalPrice:grandShr>0?grandAmt/grandShr:0
                 };
             }
             function resetCalculator() {
-                document.getElementById('fundCodeCalc').value='';
-                document.getElementById('fundNameCalc').value='';
-                document.getElementById('newAmountCalc').value='';
-                document.getElementById('newPriceCalc').value='';
+                document.getElementById('fundCodeCalc').value=''; document.getElementById('fundNameCalc').value='';
+                document.getElementById('fundSectorCalc').value='';
+                document.getElementById('newAmountCalc').value=''; document.getElementById('newPriceCalc').value='';
                 document.getElementById('editingIdCalc').value='';
                 document.getElementById('btnSaveCalc').textContent='💾 保存记录';
                 document.getElementById('btnSaveCalc').className='btn btn-primary';
                 document.getElementById('btnCancelEditCalc').style.display='none';
-                renderCalcRows(2);
-                autoCalc();
+                renderCalcRows(2); autoCalc();
             }
             function cancelEditCalc() { resetCalculator(); showToast('已取消编辑','info'); }
             function saveFromCalculator() {
@@ -624,44 +594,36 @@
                 } else {
                     dbInsert(data);
                     showToast('✅ 记录已保存','success');
-                    document.getElementById('fundCodeCalc').value='';
-                    document.getElementById('fundNameCalc').value='';
+                    document.getElementById('fundCodeCalc').value=''; document.getElementById('fundNameCalc').value='';
+                    document.getElementById('fundSectorCalc').value='';
                     refreshAll();
                 }
-                updateBadgeDot();
             }
 
-            // ---------- 录入面板逻辑 ----------
+            // ---------- 录入面板 ----------
             let inputRowCount=1;
             function createInputRow(idx) {
                 const row=document.createElement('div'); row.className='entry-row'; row.setAttribute('data-index',idx);
                 row.innerHTML=`<span class="row-num">${idx+1}</span>
-                    <input type="number" class="input-amount" placeholder="金额" step="0.01" oninput="calcInputTotal()">
-                    <input type="number" class="input-price" placeholder="单价" step="0.0001" oninput="calcInputTotal()">
+                    <div class="field-group"><label>金额:</label><input type="number" class="input-amount" placeholder="元" step="0.01" oninput="calcInputTotal()"></div>
+                    <div class="field-group"><label>单价:</label><input type="number" class="input-price" placeholder="元" step="0.0001" oninput="calcInputTotal()"></div>
                     <span class="shares-cell placeholder">— 份</span>
                     <button class="btn-remove" onclick="removeInputRow(this,${idx})" ${inputRowCount<=1?'disabled':''}>✕</button>`;
                 return row;
             }
             function renderInputRows(count) { const c=document.getElementById('inputEntriesContainer'); c.innerHTML=''; for(let i=0;i<count;i++) c.appendChild(createInputRow(i)); inputRowCount=count; updateInputBadge(); }
-            function addInputRow() { const c=document.getElementById('inputEntriesContainer'); c.appendChild(createInputRow(inputRowCount)); inputRowCount++; updateInputBadge(); }
+            function addInputRow() { document.getElementById('inputEntriesContainer').appendChild(createInputRow(inputRowCount)); inputRowCount++; updateInputBadge(); }
             function removeInputRow(btn,idx) { if(inputRowCount<=1) { showToast('至少一笔','warning'); return; } const row=btn.closest('.entry-row'); row.style.opacity='0'; row.style.transform='translateX(-20px)'; setTimeout(()=>{ row.remove(); inputRowCount--; reindexInputRows(); updateInputBadge(); calcInputTotal(); },200); }
             function reindexInputRows() { const rows=document.querySelectorAll('#inputEntriesContainer .entry-row'); rows.forEach((row,i)=>{ row.setAttribute('data-index',i); row.querySelector('.row-num').textContent=i+1; row.querySelector('.btn-remove').setAttribute('onclick',`removeInputRow(this,${i})`); }); inputRowCount=rows.length; }
-            function updateInputBadge() { document.getElementById('entryCountInput').textContent=inputRowCount+'笔'; document.querySelectorAll('#inputEntriesContainer .btn-remove').forEach(b=>b.disabled=inputRowCount<=1); }
+            function updateInputBadge() { document.getElementById('entryCountInput').textContent=inputRowCount+'笔'; }
             function calcInputTotal() {
                 let totalAmt=0, totalShr=0;
                 document.querySelectorAll('#inputEntriesContainer .entry-row').forEach(row=>{
                     const amt=parseFloat(row.querySelector('.input-amount').value)||0;
                     const prc=parseFloat(row.querySelector('.input-price').value)||0;
                     const cell=row.querySelector('.shares-cell');
-                    if(amt>0&&prc>0){
-                        const shr=amt/prc;
-                        cell.textContent=shr.toFixed(4)+' 份';
-                        cell.classList.remove('placeholder');
-                        totalAmt+=amt; totalShr+=shr;
-                    } else {
-                        cell.textContent='— 份';
-                        cell.classList.add('placeholder');
-                    }
+                    if(amt>0&&prc>0){ const shr=amt/prc; cell.textContent=shr.toFixed(4)+' 份'; cell.classList.remove('placeholder'); totalAmt+=amt; totalShr+=shr; }
+                    else { cell.textContent='— 份'; cell.classList.add('placeholder'); }
                 });
                 document.getElementById('totalAmountInput').textContent='¥'+totalAmt.toFixed(2);
                 document.getElementById('totalSharesInput').textContent=totalShr.toFixed(4)+' 份';
@@ -670,6 +632,7 @@
             function saveFromInput() {
                 const code=document.getElementById('fundCodeInput').value.trim();
                 const name=document.getElementById('fundNameInput').value.trim();
+                const sector=document.getElementById('fundSectorInput').value.trim();
                 const entries=[];
                 document.querySelectorAll('#inputEntriesContainer .entry-row').forEach(row=>{
                     const amt=parseFloat(row.querySelector('.input-amount').value)||0;
@@ -679,95 +642,62 @@
                 if(entries.length===0) { showToast('请至少输入一笔有效的持仓','error'); return; }
                 let totalAmt=0, totalShr=0;
                 entries.forEach(e=>{ totalAmt+=e.amount; totalShr+=e.shares; });
-                const record={ code, name, originalEntries:entries, newEntry:{amount:0, price:0, shares:0}, totalAmount:totalAmt, totalShares:totalShr, finalPrice:totalShr>0?totalAmt/totalShr:0 };
+                const record={ code, name, sector, originalEntries:entries, newEntry:{amount:0, price:0, shares:0}, totalAmount:totalAmt, totalShares:totalShr, finalPrice:totalShr>0?totalAmt/totalShr:0 };
                 dbInsert(record);
                 showToast('✅ 录入成功','success');
-                document.getElementById('fundCodeInput').value='';
-                document.getElementById('fundNameInput').value='';
-                renderInputRows(1);
-                calcInputTotal();
+                document.getElementById('fundCodeInput').value=''; document.getElementById('fundNameInput').value='';
+                document.getElementById('fundSectorInput').value='';
+                renderInputRows(1); calcInputTotal();
                 refreshAll();
             }
-            function resetInputForm() { document.getElementById('fundCodeInput').value=''; document.getElementById('fundNameInput').value=''; renderInputRows(1); calcInputTotal(); }
+            function resetInputForm() { document.getElementById('fundCodeInput').value=''; document.getElementById('fundNameInput').value=''; document.getElementById('fundSectorInput').value=''; renderInputRows(1); calcInputTotal(); }
 
             // ---------- 每日单价 ----------
             function renderDailyList() {
                 const container = document.getElementById('dailyListContainer');
                 const allCodes = Object.keys(getDailyDB());
-                if (allCodes.length === 0) {
-                    container.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:20px;">暂无每日单价记录</div>';
-                    return;
-                }
+                if (allCodes.length === 0) { container.innerHTML = '<div style="text-align:center;color:#94a3b8;">暂无记录</div>'; return; }
                 let html = '';
                 allCodes.forEach(code => {
                     const prices = getAllDailyPrices(code);
                     prices.forEach(item => {
-                        html += `<div class="daily-item">
-                            <span class="daily-code">${escHtml(code)}</span>
-                            <span class="daily-price">¥${item.price.toFixed(4)}</span>
-                            <span style="color:#64748b;">${item.date}</span>
-                            <button class="btn btn-xs btn-ghost" onclick="deleteDailyPriceEntry('${code}','${item.date}')">✕</button>
-                        </div>`;
+                        html += `<div class="daily-item"><span class="daily-code">${escHtml(code)}</span><span>¥${item.price.toFixed(4)}</span><span>${item.date}</span><button class="btn btn-xs btn-ghost" onclick="deleteDailyPriceEntry('${code}','${item.date}')">✕</button></div>`;
                     });
                 });
-                container.innerHTML = html || '<div style="text-align:center;color:#94a3b8;">暂无记录</div>';
+                container.innerHTML = html;
             }
-
+            function getAllDailyPrices(code) { const db = getDailyDB(); return db[code] || []; }
             function addDailyPrice() {
                 const code = document.getElementById('dailyCode').value.trim();
                 const price = parseFloat(document.getElementById('dailyPrice').value);
-                const dateInput = document.getElementById('dailyDate');
+                let dateStr = document.getElementById('dailyDate').value;
                 if (!code) { showToast('请输入基金代码','error'); return; }
                 if (isNaN(price) || price <= 0) { showToast('请输入有效的单价','error'); return; }
-                let dateStr = dateInput.value;
-                if (!dateStr) {
-                    const today = new Date();
-                    dateStr = today.toISOString().split('T')[0];
-                    dateInput.value = dateStr;
-                }
+                if (!dateStr) { const today = new Date(); dateStr = today.toISOString().split('T')[0]; document.getElementById('dailyDate').value = dateStr; }
                 addDailyPriceToDB(code, price, dateStr);
-                showToast('✅ 每日单价已保存','success');
-                document.getElementById('dailyCode').value = '';
-                document.getElementById('dailyPrice').value = '';
+                showToast('✅ 单价已保存','success');
+                document.getElementById('dailyCode').value = ''; document.getElementById('dailyPrice').value = '';
                 renderDailyList();
-                // 同时刷新记录列表，以便显示最新单价
-                if (currentTab === 'records') renderRecordsList();
             }
-
             function deleteDailyPriceEntry(code, dateStr) {
-                if (confirm(`确定删除 ${code} 在 ${dateStr} 的单价记录吗？`)) {
-                    deleteDailyPrice(code, dateStr);
-                    showToast('已删除','info');
-                    renderDailyList();
-                    if (currentTab === 'records') renderRecordsList();
-                }
+                if (confirm(`确定删除 ${code} 在 ${dateStr} 的单价？`)) { deleteDailyPrice(code, dateStr); showToast('已删除','info'); renderDailyList(); }
             }
 
-            // ---------- 记录列表（增加最新单价显示） ----------
+            // ---------- 记录列表 ----------
             function renderRecordsList() {
                 const kw=document.getElementById('searchInput').value;
                 const records=dbSearch(kw);
                 document.getElementById('recordCountLabel').textContent=`共 ${records.length} 条`;
                 const grid=document.getElementById('recordsGrid');
-                if(records.length===0) {
-                    grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;color:#94a3b8;">📭<br>暂无记录</div>';
-                    return;
-                }
+                if(records.length===0) { grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;color:#94a3b8;">📭<br>暂无记录</div>'; return; }
                 grid.innerHTML=records.map(r=>{
                     const title=r.name||r.code||'未命名';
                     const code=r.code&&r.name?r.code:'';
                     const latestDaily = getLatestDailyPrice(r.code);
-                    let dailyInfo = '';
-                    if (latestDaily) {
-                        dailyInfo = `<div style="font-size:0.7rem;color:var(--accent);margin-top:2px;">📆 最新单价: <span class="meta-val">¥${latestDaily.price.toFixed(4)}</span> (${latestDaily.date})</div>`;
-                    }
+                    let dailyInfo = latestDaily ? `<div style="font-size:0.7rem;color:var(--accent);">📆 最新单价: ¥${latestDaily.price.toFixed(4)} (${latestDaily.date})</div>` : '';
                     return `<div class="record-card-item" data-id="${r.id}">
-                        <div><strong>${escHtml(title)}</strong> ${code?`<span class="rc-code">${escHtml(code)}</span>`:''}</div>
-                        <div class="rc-meta">
-                            <span>💰 <span class="meta-val">¥${r.totalAmount.toFixed(2)}</span></span>
-                            <span>📐 <span class="meta-val">${r.totalShares.toFixed(4)}份</span></span>
-                            <span>⭐ <span class="meta-val">¥${r.finalPrice.toFixed(4)}</span></span>
-                        </div>
+                        <div><strong>${escHtml(title)}</strong> ${code?`<span class="rc-code">${escHtml(code)}</span>`:''} ${r.sector?`<span style="font-size:0.7rem;background:var(--primary-light);padding:2px 6px;border-radius:4px;">${escHtml(r.sector)}</span>`:''}</div>
+                        <div class="rc-meta"><span>💰 ${r.totalAmount.toFixed(2)}</span><span>📐 ${r.totalShares.toFixed(4)}份</span><span>⭐ ¥${r.finalPrice.toFixed(4)}</span></div>
                         ${dailyInfo}
                         <div class="rc-actions">
                             <button class="btn btn-outline btn-xs" onclick="editRecord('${r.id}')">编辑</button>
@@ -776,7 +706,6 @@
                     </div>`;
                 }).join('');
             }
-
             function editRecord(id) {
                 const record=dbFindById(id); if(!record) return;
                 if(record.newEntry && (record.newEntry.amount>0 || record.newEntry.price>0)) {
@@ -786,6 +715,7 @@
                     document.getElementById('btnCancelEditCalc').style.display='inline-flex';
                     document.getElementById('fundCodeCalc').value=record.code||'';
                     document.getElementById('fundNameCalc').value=record.name||'';
+                    document.getElementById('fundSectorCalc').value=record.sector||'';
                     const container=document.getElementById('originalEntriesContainer');
                     container.innerHTML='';
                     const orig=record.originalEntries||[];
@@ -800,6 +730,7 @@
                 } else {
                     document.getElementById('fundCodeInput').value=record.code||'';
                     document.getElementById('fundNameInput').value=record.name||'';
+                    document.getElementById('fundSectorInput').value=record.sector||'';
                     const container=document.getElementById('inputEntriesContainer');
                     container.innerHTML='';
                     const orig=record.originalEntries||[];
@@ -814,6 +745,7 @@
                     saveBtn.onclick = function() {
                         const code=document.getElementById('fundCodeInput').value.trim();
                         const name=document.getElementById('fundNameInput').value.trim();
+                        const sector=document.getElementById('fundSectorInput').value.trim();
                         const entries=[];
                         document.querySelectorAll('#inputEntriesContainer .entry-row').forEach(row=>{
                             const amt=parseFloat(row.querySelector('.input-amount').value)||0;
@@ -822,46 +754,66 @@
                         });
                         let totalAmt=0, totalShr=0;
                         entries.forEach(e=>{ totalAmt+=e.amount; totalShr+=e.shares; });
-                        const updated = { code, name, originalEntries:entries, newEntry:{amount:0,price:0,shares:0}, totalAmount:totalAmt, totalShares:totalShr, finalPrice:totalShr>0?totalAmt/totalShr:0 };
-                        if(dbUpdate(id, updated)) {
-                            showToast('✅ 记录已更新','success');
-                            resetInputForm();
-                            saveBtn.textContent = '💾 保存记录';
-                            saveBtn.onclick = saveFromInput;
-                            refreshAll();
-                        }
+                        const updated = { code, name, sector, originalEntries:entries, newEntry:{amount:0,price:0,shares:0}, totalAmount:totalAmt, totalShares:totalShr, finalPrice:totalShr>0?totalAmt/totalShr:0 };
+                        if(dbUpdate(id, updated)) { showToast('✅ 记录已更新','success'); resetInputForm(); saveBtn.textContent='💾 保存记录'; saveBtn.onclick=saveFromInput; refreshAll(); }
                     };
                 }
-                document.querySelectorAll('.record-card-item.editing-highlight').forEach(c=>c.classList.remove('editing-highlight'));
-                const card=document.querySelector(`.record-card-item[data-id="${id}"]`);
-                if(card) card.classList.add('editing-highlight');
             }
-            function deleteRecord(id) {
-                if(confirm('确定删除该记录吗？')) {
-                    if(dbDelete(id)) {
-                        if(document.getElementById('editingIdCalc').value===id) resetCalculator();
-                        showToast('已删除','info'); refreshAll();
-                    }
-                }
-            }
+            function deleteRecord(id) { if(confirm('确定删除该记录吗？')) { if(dbDelete(id)) { if(document.getElementById('editingIdCalc').value===id) resetCalculator(); showToast('已删除','info'); refreshAll(); } } }
 
-            // ---------- 概览 ----------
+            // ---------- 概览（板块占比+基金占比列表） ----------
             function renderOverview() {
-                const records=getDB();
-                const container=document.getElementById('pieChart');
-                const legend=document.getElementById('pieLegend');
-                const empty=document.getElementById('overviewEmpty');
-                if(records.length===0) { container.style.display='none'; legend.innerHTML=''; empty.style.display='block'; return; }
-                empty.style.display='none'; container.style.display='block';
-                const map=new Map();
-                records.forEach(r=>{ const key=r.name||r.code||'未命名'; const existing=map.get(key); if(existing) existing.amount+=r.totalAmount; else map.set(key,{name:key, amount:r.totalAmount}); });
-                const groups=Array.from(map.values()).sort((a,b)=>b.amount-a.amount);
-                const total=groups.reduce((s,g)=>s+g.amount,0);
-                const colors=['#4f46e5','#06b6d4','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#6366f1','#14b8a6','#f97316'];
-                let gradientStr=''; let cumulative=0;
-                groups.forEach((g,i)=>{ const start=(cumulative/total)*360; cumulative+=g.amount; const end=(cumulative/total)*360; gradientStr+=`${colors[i%colors.length]} ${start}deg ${end}deg,`; });
-                container.style.background=`conic-gradient(${gradientStr.slice(0,-1)})`;
-                legend.innerHTML=groups.map((g,i)=>`<div class="pie-legend-item"><div class="legend-color" style="background:${colors[i%colors.length]};"></div><span>${escHtml(g.name)} (${(g.amount/total*100).toFixed(1)}%)</span></div>`).join('');
+                const records = getDB();
+                const totalAmount = records.reduce((s,r)=>s+(r.totalAmount||0),0);
+                const fundCount = records.length;
+                document.getElementById('statTotalAmount').textContent = '¥' + totalAmount.toFixed(2);
+                document.getElementById('statFundCount').textContent = fundCount;
+
+                // 板块占比
+                const sectorMap = new Map();
+                records.forEach(r => {
+                    const sector = r.sector || '未分类';
+                    const existing = sectorMap.get(sector);
+                    if (existing) existing.amount += r.totalAmount;
+                    else sectorMap.set(sector, { sector, amount: r.totalAmount });
+                });
+                const sectors = Array.from(sectorMap.values()).sort((a,b) => b.amount - a.amount);
+                const sectorTbody = document.querySelector('#sectorTable tbody');
+                sectorTbody.innerHTML = '';
+                if (sectors.length === 0) {
+                    document.getElementById('sectorEmpty').style.display = 'block';
+                    document.getElementById('sectorTable').style.display = 'none';
+                } else {
+                    document.getElementById('sectorEmpty').style.display = 'none';
+                    document.getElementById('sectorTable').style.display = '';
+                    sectors.forEach(s => {
+                        const pct = totalAmount > 0 ? (s.amount / totalAmount * 100).toFixed(1) : '0.0';
+                        sectorTbody.innerHTML += `<tr><td>${escHtml(s.sector)}</td><td>¥${s.amount.toFixed(2)}</td><td>${pct}%</td></tr>`;
+                    });
+                }
+
+                // 基金占比
+                const fundMap = new Map();
+                records.forEach(r => {
+                    const key = r.name || r.code || '未命名';
+                    const existing = fundMap.get(key);
+                    if (existing) existing.amount += r.totalAmount;
+                    else fundMap.set(key, { name: key, amount: r.totalAmount });
+                });
+                const funds = Array.from(fundMap.values()).sort((a,b) => b.amount - a.amount);
+                const fundTbody = document.querySelector('#fundTable tbody');
+                fundTbody.innerHTML = '';
+                if (funds.length === 0) {
+                    document.getElementById('fundEmpty').style.display = 'block';
+                    document.getElementById('fundTable').style.display = 'none';
+                } else {
+                    document.getElementById('fundEmpty').style.display = 'none';
+                    document.getElementById('fundTable').style.display = '';
+                    funds.forEach(f => {
+                        const pct = totalAmount > 0 ? (f.amount / totalAmount * 100).toFixed(1) : '0.0';
+                        fundTbody.innerHTML += `<tr><td>${escHtml(f.name)}</td><td>¥${f.amount.toFixed(2)}</td><td>${pct}%</td></tr>`;
+                    });
+                }
             }
 
             function refreshAll() { renderRecordsList(); if(currentTab==='overview') renderOverview(); if(currentTab==='daily') renderDailyList(); updateBadgeDot(); }
@@ -878,7 +830,6 @@
 
             function escHtml(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
 
-            // 暴露全局
             window.switchTab=switchTab;
             window.addEntryRow=addEntryRow; window.removeCalcRow=removeCalcRow; window.autoCalc=autoCalc;
             window.saveFromCalculator=saveFromCalculator; window.cancelEditCalc=cancelEditCalc;
@@ -889,23 +840,14 @@
             window.exportAllRecords=exportAllRecords;
             window.handleDrop=handleDrop; window.handleDragOver=handleDragOver; window.handleDragLeave=handleDragLeave;
             window.handleFileSelect=handleFileSelect; window.clearAllData=clearAllData;
-            window.renderOverview=renderOverview;
             window.addDailyPrice=addDailyPrice; window.deleteDailyPriceEntry=deleteDailyPriceEntry; window.renderDailyList=renderDailyList;
 
-            // 初始化
             renderCalcRows(2); autoCalc();
             renderInputRows(1); calcInputTotal();
             renderRecordsList();
             updateBadgeDot();
-            // 设置默认日期为今天
             document.getElementById('dailyDate').value = new Date().toISOString().split('T')[0];
             try { const tab=sessionStorage.getItem('fund_calc_tab'); if(tab) switchTab(tab); } catch(e) {}
-            document.addEventListener('keydown',e=>{
-                if((e.ctrlKey||e.metaKey)&&e.key==='s') { e.preventDefault();
-                    if(currentTab==='calculator') saveFromCalculator();
-                    else if(currentTab==='input') saveFromInput();
-                }
-            });
         })();
     </script>
 </body>
